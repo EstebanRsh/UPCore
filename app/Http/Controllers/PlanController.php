@@ -21,7 +21,7 @@ class PlanController extends Controller
      */
     public function create()
     {
-        //
+        return view('planes.create');
     }
 
     /**
@@ -29,7 +29,19 @@ class PlanController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // 1. Validar los datos del formulario
+        $validated = $request->validate([
+            'nombre_plan' => 'required|string|max:255',
+            'velocidad_mbps' => 'required|integer|min:1',
+            'precio_mensual' => 'required|numeric|min:0',
+            'descripcion' => 'nullable|string',
+        ]);
+
+        // 2. Crear el Plan con los datos validados
+        Plan::create($validated);
+
+        // 3. Redirigir al usuario de vuelta a la lista de planes con un mensaje de éxito
+        return redirect()->route('planes.index')->with('success', '¡Plan creado exitosamente!');
     }
 
     /**
