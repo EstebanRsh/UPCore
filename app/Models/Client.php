@@ -15,7 +15,6 @@ class Client extends Model
         'nombre', // 
         'apellido', // 
         'dni_cuit', // 
-        'direccion_servicio', // 
         'telefono', // 
     ];
 
@@ -32,9 +31,12 @@ class Client extends Model
      * Get the contracts for the client.
      * Relación 1 a N con Contrato 
      */
+    public function serviceAddresses()
+    {
+        return $this->hasMany(ServiceAddress::class, 'client_id');
+    }
     public function contracts()
     {
-        // El segundo argumento es la foreign key en la tabla 'contracts'
         return $this->hasMany(Contract::class, 'cliente_id');
     }
 }

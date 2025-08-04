@@ -1,0 +1,120 @@
+***************************************************
+** PROYECTO: GESTIÓN DE PAGOS ISP                **
+** MODELO ENTIDAD-RELACIÓN (MER) - VERSIÓN 2     **
+***************************************************
+
+---
+## ENTIDADES
+---
+
+ENTIDAD: Usuarios (Users)
+OBJETIVO: Gestionar el acceso al sistema (login).
+ATRIBUTOS:
+- id (PK, Autoincremental)
+- name (Texto)
+- email (Texto, Único)
+- password (Texto, Encriptado)
+- rol (Texto: 'manager', 'cliente', 'pendiente')
+- created_at / updated_at (Timestamps automáticos de Laravel)
+
+ENTIDAD: Clientes (Clients)
+OBJETIVO: Almacenar datos específicos del cliente para la facturación.
+ATRIBUTOS:
+- id (PK, Autoincremental)
+- user_id (FK -> users.id, Único) -> Conexión con la tabla de usuarios.
+- nombre (Texto)
+- apellido (Texto)
+- dni_cuit (Texto, Único)
+- telefono (Texto)
+- created_at / updated_at (Timestamps automáticos de Laravel)
+
+ENTIDAD: Direcciones de Servicio (ServiceAddresses)
+OBJETIVO: Almacenar las múltiples direcciones de servicio que puede tener un cliente.
+ATRIBUTOS:
+- id (PK, Autoincremental)
+- client_id (FK -> clients.id)
+- etiqueta (Texto, Ej: "Casa", "Comercio")
+- direccion (Texto)
+- ciudad (Texto)
+- departamento (Texto, Opcional, Ej: "Piso 3, Dpto A")
+- notas (Texto, Opcional)
+- created_at / updated_at (Timestamps automáticos de Laravel)
+
+ENTIDAD: Planes (Plans)
+OBJETIVO: Definir los servicios que se venden.
+ATRIBUTOS:
+- id (PK, Autoincremental)
+- nombre_plan (Texto)
+- velocidad_mbps (Entero)
+- precio_mensual (Decimal)
+- descripcion (Texto, Opcional)
+- activo (Booleano)
+- created_at / updated_at (Timestamps automáticos de Laravel)
+
+ENTIDAD: Contratos (Contracts)
+OBJETIVO: Vincular un Cliente a un Plan y a una Dirección de Servicio específica.
+ATRIBUTOS:
+- id (PK, Autoincremental)
+- cliente_id (FK -> clientes.id)
+- plan_id (FK -> planes.id)
+- service_address_id (FK -> service_addresses.id)
+- fecha_instalacion (Fecha)
+- estado (Texto: 'Activo', 'Suspendido', 'Cancelado')
+- created_at / updated_at (Timestamps automáticos de Laravel)
+
+ENTIDAD: Facturas (Invoices)
+OBJETIVO: Representar la deuda mensual de un contrato.
+ATRIBUTOS:
+- id (PK, Autoincremental)
+- contrato_id (FK -> contratos.id)
+- fecha_emision (Fecha)
+- fecha_vencimiento (Fecha)
+- monto (Decimal)
+- estado (Texto: 'Pendiente', 'Pagada', 'Vencida')
+- created_at / updated_at (Timestamps automáticos de Laravel)
+
+ENTIDAD: Pagos (Payments)
+OBJETIVO: Registrar el dinero recibido que salda una factura.
+ATRIBUTOS:
+- id (PK, Autoincremental)
+- factura_id (FK -> facturas.id)
+- fecha_pago (Fecha y Hora)
+- monto_pagado (Decimal)
+- metodo_pago (Texto: 'Efectivo', 'Transferencia', etc.)
+- notas (Texto, Opcional)
+- created_at / updated_at (Timestamps automáticos de Laravel)
+
+---
+## RELACIONES (CARDINALIDAD)
+---
+
+- Un Usuario (con rol 'cliente') tiene un único perfil de Cliente (1 a 1).
+- Un Cliente puede tener muchas Direcciones de Servicio (1 a N).
+- Un Cliente puede tener muchos Contratos (1 a N).
+- Un Plan puede estar en muchos Contratos (1 a N).
+- Un Contrato genera muchas Facturas (1 a N).
+- Una Factura puede recibir muchos Pagos (para pagos parciales) (1 a N).
+
+---
+## FUTURAS FUNCIONALIDADES / MEJORAS
+---
+
+### Mejoras de Interfaz de Usuario (UI/UX)
+- PAGINACIÓN: En todas las tablas con muchos registros (clientes, planes, etc.) para mejorar el rendimiento y la usabilidad.
+- BUSCADORES: Cajas de búsqueda en las tablas para filtrar resultados en tiempo real (ej: buscar cliente por nombre o DNI).
+- CLASIFICACIÓN DE COLUMNAS (SORTERS): Permitir hacer clic en las cabeceras de las tablas para ordenar los datos por esa columna (ascendente/descendente).
+- MENÚS DESPLEGABLES: Reorganizar la barra de navegación principal para agrupar funcionalidades relacionadas (ej: Clientes -> Ver Lista, Reportes).
+- ORGANIZACIÓN CON ACORDEONES: Usar secciones colapsables en las páginas de detalles (como la del cliente) para mostrar la información de forma más ordenada.
+
+### Funcionalidades del Manager
+- DASHBOARD PRINCIPAL: Un panel de control con estadísticas clave (clientes activos, ingresos mensuales, facturas vencidas) y gráficos.
+- GESTIÓN DE CONTRATOS: CRUD completo para crear, ver, editar y cancelar contratos, vinculando Clientes, Planes y Direcciones.
+- GENERACIÓN DE FACTURAS: Un proceso (manual o automático) para generar todas las facturas de los contratos activos para el mes actual.
+- REGISTRO DE PAGOS: Un formulario para que el manager pueda registrar un pago que un cliente hizo en efectivo o por transferencia.
+- REPORTES: Generación de informes (ingresos, nuevos clientes, etc.).
+
+### Funcionalidades del Portal de Cliente
+- AUTOGESTIÓN: Permitir que el cliente edite su propia información personal (teléfono, contraseña, etc.).
+- HISTORIAL DE FACTURAS Y PAGOS: Una vista para que el cliente vea todas sus facturas, su estado, y los pagos que ha realizado.
+- DESCARGA DE FACTURAS EN PDF: Generar y descargar facturas en formato PDF.
+- PAGOS ONLINE: Integración con pasarelas de pago (Stripe, Mercado Pago) para que el cliente pague con tarjeta directamente desde la aplicación.

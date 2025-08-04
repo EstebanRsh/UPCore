@@ -29,7 +29,6 @@ class UserApprovalController extends Controller
                 'nombre' => $user->name,
                 'apellido' => '',
                 'dni_cuit' => '',
-                'direccion_servicio' => '',
                 'telefono' => '',
             ]);
         });

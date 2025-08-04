@@ -21,6 +21,9 @@
                         <x-nav-link :href="route('admin.approvals.index')" :active="request()->routeIs('admin.approvals.index')">
                             {{ __('Aprobaciones') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.*')">
+                            {{ __('Clientes') }}
+                        </x-nav-link>
                     @endif
                 </div>
             </div>
@@ -89,6 +92,9 @@
 
                 <x-responsive-nav-link :href="route('admin.approvals.index')" :active="request()->routeIs('admin.approvals.index')">
                     {{ __('Aprobaciones') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.*')">
+                    {{ __('Clientes') }}
                 </x-responsive-nav-link>
             @endif
         </div>

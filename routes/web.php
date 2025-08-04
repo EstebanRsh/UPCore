@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\UserApprovalController;
+use App\Http\Controllers\ClientController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -22,6 +23,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/approvals', [UserApprovalController::class, 'index'])->name('admin.approvals.index');
         Route::patch('/approvals/{user}', [UserApprovalController::class, 'approve'])->name('admin.approvals.approve');
         Route::delete('/approvals/{user}', [UserApprovalController::class, 'reject'])->name('admin.approvals.reject');
+        Route::resource('clients', ClientController::class);
     });
 });
 
