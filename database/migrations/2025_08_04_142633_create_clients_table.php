@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->unique()->constrained('users');
             $table->string('nombre');
+            $table->string('apellido');
             $table->string('dni_cuit')->unique();
             $table->string('direccion_servicio');
             $table->string('telefono');

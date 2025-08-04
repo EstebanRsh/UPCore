@@ -17,6 +17,10 @@
                         <x-nav-link :href="route('planes.index')" :active="request()->routeIs('planes.*')">
                             {{ __('Planes') }}
                         </x-nav-link>
+
+                        <x-nav-link :href="route('admin.approvals.index')" :active="request()->routeIs('admin.approvals.index')">
+                            {{ __('Aprobaciones') }}
+                        </x-nav-link>
                     @endif
                 </div>
             </div>
@@ -81,6 +85,10 @@
             @if (auth()->user()->rol === 'manager')
                 <x-responsive-nav-link :href="route('planes.index')" :active="request()->routeIs('planes.*')">
                     {{ __('Planes') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('admin.approvals.index')" :active="request()->routeIs('admin.approvals.index')">
+                    {{ __('Aprobaciones') }}
                 </x-responsive-nav-link>
             @endif
         </div>
