@@ -55,24 +55,40 @@ class PlanController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Plan $plane)
     {
-        //
+        return view('planes.edit', ['plan' => $plane]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Plan $plane)
     {
-        //
+        // 1. Validar los datos
+        $validated = $request->validate([
+            'nombre_plan' => 'required|string|max:255',
+            'velocidad_mbps' => 'required|integer|min:1',
+            'precio_mensual' => 'required|numeric|min:0',
+            'descripcion' => 'nullable|string',
+        ]);
+
+        // 2. Actualizar el plan con los datos validados
+        $plane->update($validated);
+
+        // 3. Redirigir con mensaje de éxito
+        return redirect()->route('planes.index')->with('success', '¡Plan actualizado exitosamente!');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Plan $plane)
     {
-        //
+        // 1. Eliminar el plan de la base de datos
+        $plane->delete();
+
+        // 2. Redirigir con un mensaje de éxito
+        return redirect()->route('planes.index')->with('success', '¡Plan eliminado exitosamente!');
     }
 }

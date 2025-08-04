@@ -34,6 +34,7 @@
                                     <th class="py-3 px-4 uppercase font-semibold text-sm">Velocidad (Mbps)</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm">Precio Mensual</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm">Acciones</th>
+
                                 </tr>
                             </thead>
                             <tbody class="text-gray-700">
@@ -44,6 +45,20 @@
                                         <td class="py-3 px-4">{{ $plan->velocidad_mbps }}</td>
                                         <td class="py-3 px-4">${{ number_format($plan->precio_mensual, 2) }}</td>
                                         <td class="py-3 px-4">
+                                            <a href="{{ route('planes.edit', $plan) }}"
+                                                class="bg-amber-500 hover:bg-amber-700 text-white font-bold py-1 px-3 rounded text-xs">
+                                                Editar
+                                            </a>
+                                            <form action="{{ route('planes.destroy', $plan) }}" method="POST"
+                                                onsubmit="return confirm('¿Estás seguro de que quieres eliminar este plan?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"
+                                                    class="bg-red-600 hover:bg-red-800 text-white font-bold py-1 px-3 rounded text-xs">
+                                                    Eliminar
+                                                </button>
+                                            </form>
+                                        </td>
                                         </td>
                                     </tr>
                                 @endforeach
