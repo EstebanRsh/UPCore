@@ -130,7 +130,8 @@
                                             </span>
                                         </td>
                                         <td class="py-3 px-4">
-                                            <a href="#" class="text-indigo-600 hover:text-indigo-900">Ver</a>
+                                            <a href="{{ route('contracts.show', $contract) }}"
+                                                class="text-indigo-600 hover:text-indigo-900">Ver</a>
                                         </td>
                                     </tr>
                                 @empty

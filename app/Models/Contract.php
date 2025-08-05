@@ -10,10 +10,11 @@ class Contract extends Model
     use HasFactory;
 
     protected $fillable = [
-        'cliente_id', // 
-        'plan_id', // 
-        'fecha_instalacion', // 
-        'estado', // 
+        'cliente_id',
+        'plan_id',
+        'service_address_id',
+        'fecha_instalacion',
+        'estado',
     ];
 
     /**
@@ -32,6 +33,10 @@ class Contract extends Model
     public function plan()
     {
         return $this->belongsTo(Plan::class);
+    }
+    public function serviceAddress()
+    {
+        return $this->belongsTo(ServiceAddress::class);
     }
 
     /**

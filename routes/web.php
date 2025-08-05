@@ -36,6 +36,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/clients/{client}/addresses/{address}', [ServiceAddressController::class, 'destroy'])->name('clients.addresses.destroy');
         Route::get('/clients/{client}/contracts/create', [ContractController::class, 'create'])->name('contracts.create');
         Route::post('/clients/{client}/contracts', [ContractController::class, 'store'])->name('contracts.store');
+        Route::resource('contracts', ContractController::class)->except(['create', 'store']);
+        Route::patch('/contracts/{contract}/status', [ContractController::class, 'updateStatus'])->name('contracts.updateStatus');
     });
 });
 

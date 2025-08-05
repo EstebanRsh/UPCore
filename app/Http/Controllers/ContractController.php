@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Contract;
 use App\Models\Plan;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ContractController extends Controller
 {
@@ -68,9 +69,11 @@ class ContractController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Contract $contract)
     {
-        //
+        $contract->load(['client.user', 'plan', 'serviceAddress']);
+
+        return view('contracts.show', ['contract' => $contract]);
     }
 
     /**
@@ -95,5 +98,17 @@ class ContractController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+    public function updateStatus(Request $request, Contract $contract)
+    {
+        // Validamos que el estado sea uno de los permitidos
+        $validated = $request->validate([
+            'estado' => ['required', 'string', Rule::in(['Activo', 'Suspendido', 'Cancelado'])],
+        ]);
+
+        // Actualizamos el contrato
+        $contract->update($validated);
+
+        return redirect()->route('contracts.show', $contract)->with('success', '¡Estado del contrato actualizado!');
     }
 }
