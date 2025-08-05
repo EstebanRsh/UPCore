@@ -28,6 +28,15 @@
                         <a href="{{ route('clients.edit', $client) }}"
                             class="bg-amber-500 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded">Editar
                             Información</a>
+                        <form action="{{ route('clients.destroy', $client) }}" method="POST"
+                            onsubmit="return confirm('¿Estás seguro de que quieres dar de baja a este cliente? Esta acción desactivará su acceso y lo ocultará de las listas, pero su historial se conservará.');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit"
+                                class="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 rounded">
+                                Dar de Baja
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -36,21 +45,40 @@
                 <div class="p-6 text-gray-900">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-medium">Direcciones de Servicio</h3>
-                        <a href="#"
+                        <a href="{{ route('clients.addresses.create', $client) }}"
                             class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Añadir
                             Dirección</a>
                     </div>
 
                     @forelse($client->serviceAddresses as $address)
-                        <div class="border-t p-4">
-                            <p><strong>Etiqueta:</strong> {{ $address->etiqueta }}</p>
-                            <p>{{ $address->direccion }},
-                                {{ $address->departamento ? $address->departamento . ',' : '' }}
-                                {{ $address->ciudad }}
-                            </p>
-                            @if ($address->notas)
-                                <p class="text-sm text-gray-600 mt-2"><strong>Notas:</strong> {{ $address->notas }}</p>
-                            @endif
+                        <div class="border-t p-4 flex justify-between items-center">
+                            <div>
+                                <p><strong>Etiqueta:</strong> {{ $address->etiqueta }}</p>
+                                <p>{{ $address->direccion }},
+                                    {{ $address->departamento ? $address->departamento . ',' : '' }}
+                                    {{ $address->ciudad }}</p>
+                                @if ($address->notas)
+                                    <p class="text-sm text-gray-600 mt-2"><strong>Notas:</strong> {{ $address->notas }}
+                                    </p>
+                                @endif
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <a href="{{ route('clients.addresses.edit', ['client' => $client, 'address' => $address]) }}"
+                                    class="bg-amber-500 hover:bg-amber-700 text-white font-bold py-1 px-3 rounded text-xs">
+                                    Editar
+                                </a>
+                                <form
+                                    action="{{ route('clients.addresses.destroy', ['client' => $client, 'address' => $address]) }}"
+                                    method="POST"
+                                    onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta dirección?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                        class="bg-red-600 hover:bg-red-800 text-white font-bold py-1 px-3 rounded text-xs">
+                                        Eliminar
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     @empty
                         <p class="text-gray-500">Este cliente aún no tiene direcciones de servicio registradas.</p>
@@ -62,9 +90,10 @@
                 <div class="p-6 text-gray-900">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-medium">Contratos del Cliente</h3>
-                        <a href="#"
+                        <a href="{{ route('contracts.create', $client) }}"
                             class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Crear
                             Contrato</a>
+
                     </div>
 
                     <div class="overflow-x-auto">

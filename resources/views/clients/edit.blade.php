@@ -30,13 +30,13 @@
                                 <label for="dni_cuit" class="block font-medium text-sm text-gray-700">DNI / CUIT</label>
                                 <input id="dni_cuit" name="dni_cuit" type="text"
                                     value="{{ old('dni_cuit', $client->dni_cuit) }}"
-                                    class="block mt-1 w-full rounded-md shadow-sm border-gray-300" required />
+                                    class="block mt-1 w-full rounded-md shadow-sm border-gray-300" />
                             </div>
                             <div>
                                 <label for="telefono" class="block font-medium text-sm text-gray-700">Teléfono</label>
                                 <input id="telefono" name="telefono" type="text"
                                     value="{{ old('telefono', $client->telefono) }}"
-                                    class="block mt-1 w-full rounded-md shadow-sm border-gray-300" required />
+                                    class="block mt-1 w-full rounded-md shadow-sm border-gray-300" />
                             </div>
                         </div>
 

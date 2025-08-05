@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule; // Y este para la validación avanzada
+use Illuminate\Support\Facades\DB;
 
 class ClientController extends Controller
 {
@@ -62,9 +63,9 @@ class ClientController extends Controller
         $validated = $request->validate([
             'nombre' => 'required|string|max:255',
             'apellido' => 'required|string|max:255',
-            'telefono' => 'required|string|max:50',
+            'telefono' => 'nullable|string|max:50',
             'dni_cuit' => [
-                'required',
+                'nullable',
                 'string',
                 'max:20',
                 Rule::unique('clients')->ignore($client->id), // Ignora el DNI/CUIT de este cliente al validar
@@ -80,8 +81,22 @@ class ClientController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Client $client)
     {
-        //
+        // Usamos una transacción para asegurar que ambas operaciones se completen
+        DB::transaction(function () use ($client) {
+            // Obtenemos el usuario asociado al cliente
+            $user = $client->user;
+
+            // Realizamos la baja lógica del cliente
+            $client->delete();
+
+            // Y también la baja lógica del usuario para que no pueda iniciar sesión
+            if ($user) {
+                $user->delete();
+            }
+        });
+
+        return redirect()->route('clients.index')->with('success', '¡Cliente dado de baja exitosamente!');
     }
 }
