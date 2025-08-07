@@ -4,23 +4,28 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\Contract;
+use App\Models\Invoice;
 use App\Models\Payment;
-use App\Models\PrepaidPeriod;
-use App\Models\Promotion;
-use App\Jobs\GenerateMonthlyInvoices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
+// Imports para el PDF
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
+
 class BillingController extends Controller
 {
+    /**
+     * Muestra la página principal de facturación, busca clientes
+     * y muestra el estado de cuenta del cliente seleccionado.
+     */
     public function index(Request $request)
     {
         $searchTerm = $request->input('search');
         $clients = null;
         $selectedClient = null;
-        $promotions = Promotion::where('activa', true)->get();
-        // Si hay un término de búsqueda, buscamos en la base de datos
+
         if ($searchTerm) {
             $clients = Client::with('user')
                 ->where('nombre', 'like', "%{$searchTerm}%")
@@ -33,7 +38,6 @@ class BillingController extends Controller
             $selectedClient = Client::with([
                 'user',
                 'contracts.plan',
-                // Cargamos solo las facturas con estado 'Pendiente' de cada contrato
                 'contracts.invoices' => function ($query) {
                     $query->where('estado', 'Pendiente');
                 }
@@ -44,82 +48,70 @@ class BillingController extends Controller
             'clients' => $clients,
             'searchTerm' => $searchTerm,
             'selectedClient' => $selectedClient,
-            'promotions' => $promotions,
         ]);
     }
-    public function processAdvancedPayment(Request $request)
+
+    /**
+     * Muestra el formulario para crear una nueva factura y registrar un pago manualmente.
+     */
+    public function createInvoice(Client $client)
     {
-        // 1. Validamos los datos básicos del formulario
-        $request->validate([
-            'client_id' => 'required|exists:clients,id',
+        $contracts = $client->contracts()->where('estado', 'Activo')->with('plan')->get();
+        return view('billing.create-invoice', [
+            'client' => $client,
+            'contracts' => $contracts,
+        ]);
+    }
+
+    /**
+     * Guarda una nueva factura, su pago correspondiente y genera el recibo en PDF.
+     */
+    public function storeInvoice(Request $request, Client $client)
+    {
+        $validated = $request->validate([
             'contract_id' => 'required|exists:contracts,id',
-            'promotion_id' => 'nullable|exists:promotions,id',
-            'meses_a_pagar' => 'required_without:promotion_id|integer|min:1',
+            'mes_servicio' => 'required|date_format:Y-m',
+            'monto_pagado' => 'required|numeric|min:0.01',
+            'metodo_pago' => 'required|string', // <-- CORREGIDO
+            'fecha_pago' => 'required|date',
         ]);
 
-        $contract = Contract::with('plan')->find($request->contract_id);
-        $totalAPagar = 0;
-        $mesesDuracion = 0;
-        $precioCongelado = $contract->plan->precio_mensual;
+        $contract = Contract::find($validated['contract_id']);
+        $serviceMonth = Carbon::parse($validated['mes_servicio']);
+        $invoice = null;
 
-        // 2. Calculamos el total dependiendo si se usó una promo o un pago manual
-        if ($request->filled('promotion_id')) {
-            $promo = Promotion::find($request->promotion_id);
-            $mesesDuracion = $promo->duracion_meses;
-            $precioBaseTotal = $precioCongelado * $mesesDuracion;
-
-            switch ($promo->tipo_descuento) {
-                case 'porcentaje':
-                    $totalAPagar = $precioBaseTotal * (1 - ($promo->valor_descuento / 100));
-                    $precioCongelado = $totalAPagar / $mesesDuracion;
-                    break;
-                case 'monto_fijo':
-                    $totalAPagar = $precioBaseTotal - $promo->valor_descuento;
-                    $precioCongelado = $totalAPagar / $mesesDuracion;
-                    break;
-                case 'meses_gratis':
-                    $mesesPagados = $mesesDuracion - $promo->valor_descuento;
-                    $totalAPagar = $precioCongelado * $mesesPagados;
-                    break;
-            }
-        } else {
-            $mesesDuracion = $request->meses_a_pagar;
-            $totalAPagar = $precioCongelado * $mesesDuracion;
-        }
-
-        // 3. Guardamos todo en la base de datos dentro de una transacción
         try {
-            DB::transaction(function () use ($request, $contract, $totalAPagar, $mesesDuracion, $precioCongelado) {
-                // Creamos el registro del Pago
-                $payment = Payment::create([
-                    'factura_id' => null, // Es un pago adelantado, no ligado a una factura
-                    'fecha_pago' => Carbon::now(),
-                    'monto_pagado' => $totalAPagar,
-                    'metodo_pago' => 'Adelantado/Promo', // O un método que elijas
-                    'notas' => 'Pago adelantado por ' . $mesesDuracion . ' meses.',
-                ]);
-
-                // Creamos el registro del Período Prepagado
-                PrepaidPeriod::create([
+            $invoice = DB::transaction(function () use ($validated, $contract, $serviceMonth) {
+                // 1. Creamos la Factura
+                $newInvoice = Invoice::create([
                     'contract_id' => $contract->id,
-                    'payment_id' => $payment->id,
-                    'fecha_inicio' => Carbon::now()->startOfDay(),
-                    'fecha_fin' => Carbon::now()->addMonths($mesesDuracion)->endOfDay(),
-                    'precio_congelado_mensual' => $precioCongelado,
+                    'monto' => $validated['monto_pagado'],
+                    'fecha_emision' => $serviceMonth->startOfMonth(),
+                    'fecha_vencimiento' => $serviceMonth->endOfMonth(),
+                    'estado' => 'Pagada',
                 ]);
+
+                // 2. Creamos el Pago asociado
+                $newInvoice->payments()->create([
+                    'monto_pagado' => $validated['monto_pagado'],
+                    'metodo_pago' => $validated['metodo_pago'],
+                    'fecha_pago' => $validated['fecha_pago'],
+                ]);
+
+                return $newInvoice;
             });
+
+            // --- LÓGICA DEL PDF (SOLO SE EJECUTA SI LA TRANSACCIÓN FUE EXITOSA) ---
+            $invoice->load('contract.client.user', 'contract.plan', 'contract.serviceAddress', 'payments');
+            $payment = $invoice->payments->first();
+            $pdf = Pdf::loadView('pdf.receipt', ['invoice' => $invoice, 'payment' => $payment]);
+            $filename = 'recibo-' . $invoice->id . '-' . time() . '.pdf';
+            Storage::put('private/receipts/' . $filename, $pdf->output());
+
+            return redirect()->route('billing.index', ['client_id' => $client->id])
+                ->with('success', '¡Cobro registrado y recibo PDF generado exitosamente!');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Hubo un error al procesar el pago: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Hubo un error al registrar el cobro: ' . $e->getMessage())->withInput();
         }
-
-        return redirect()->route('billing.index', ['client_id' => $request->client_id])
-            ->with('success', '¡Pago adelantado por ' . $mesesDuracion . ' meses registrado exitosamente!');
-    }
-    public function generateInvoices()
-    {
-        // Despachamos el trabajo a la cola
-        GenerateMonthlyInvoices::dispatch();
-
-        return redirect()->route('billing.index')->with('success', 'El proceso de generación de facturas ha comenzado. Puede tardar unos minutos en completarse.');
     }
 }

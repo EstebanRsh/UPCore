@@ -19,36 +19,42 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
 
-    Route::middleware(['role:manager'])->group(function () {
-        Route::resource('planes', PlanController::class);
-        Route::get('/approvals', [UserApprovalController::class, 'index'])->name('admin.approvals.index');
-        Route::patch('/approvals/{user}', [UserApprovalController::class, 'approve'])->name('admin.approvals.approve');
-        Route::delete('/approvals/{user}', [UserApprovalController::class, 'reject'])->name('admin.approvals.reject');
-        Route::resource('clients', ClientController::class);
+Route::middleware(['auth', 'verified', 'role:manager'])->group(function () {
+    // Gestiones Principales
+    Route::resource('planes', PlanController::class);
+    Route::resource('clients', ClientController::class);
+    Route::resource('promotions', PromotionController::class);
+    Route::resource('contracts', ContractController::class)->except(['create', 'store']);
 
-        // <-- 2. AÑADIR ESTE BLOQUE DE RUTAS -->
-        Route::get('/clients/{client}/addresses/create', [ServiceAddressController::class, 'create'])->name('clients.addresses.create');
-        Route::post('/clients/{client}/addresses', [ServiceAddressController::class, 'store'])->name('clients.addresses.store');
-        Route::get('/clients/{client}/addresses/{address}/edit', [ServiceAddressController::class, 'edit'])->name('clients.addresses.edit');
-        Route::patch('/clients/{client}/addresses/{address}', [ServiceAddressController::class, 'update'])->name('clients.addresses.update');
-        Route::delete('/clients/{client}/addresses/{address}', [ServiceAddressController::class, 'destroy'])->name('clients.addresses.destroy');
-        Route::get('/clients/{client}/contracts/create', [ContractController::class, 'create'])->name('contracts.create');
-        Route::post('/clients/{client}/contracts', [ContractController::class, 'store'])->name('contracts.store');
-        Route::resource('contracts', ContractController::class)->except(['create', 'store']);
-        Route::patch('/contracts/{contract}/status', [ContractController::class, 'updateStatus'])->name('contracts.updateStatus');
-        Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
-        Route::post('/billing/process-payment', [BillingController::class, 'processAdvancedPayment'])->name('billing.processPayment');
+    // Aprobaciones
+    Route::get('/approvals', [UserApprovalController::class, 'index'])->name('admin.approvals.index');
+    Route::patch('/approvals/{user}', [UserApprovalController::class, 'approve'])->name('admin.approvals.approve');
+    Route::delete('/approvals/{user}', [UserApprovalController::class, 'reject'])->name('admin.approvals.reject');
 
-        Route::post('/billing/generate-invoices', [BillingController::class, 'generateInvoices'])->name('billing.generateInvoices');
-        Route::get('/invoices/{invoice}/payments/create', [PaymentController::class, 'create'])->name('payments.create');
-        Route::post('/invoices/{invoice}', [PaymentController::class, 'store'])->name('payments.store');
-        Route::resource('promotions', PromotionController::class);
-    });
+    // Direcciones de Cliente
+    Route::get('/clients/{client}/addresses/create', [ServiceAddressController::class, 'create'])->name('clients.addresses.create');
+    Route::post('/clients/{client}/addresses', [ServiceAddressController::class, 'store'])->name('clients.addresses.store');
+    Route::get('/clients/{client}/addresses/{address}/edit', [ServiceAddressController::class, 'edit'])->name('clients.addresses.edit');
+    Route::patch('/clients/{client}/addresses/{address}', [ServiceAddressController::class, 'update'])->name('clients.addresses.update');
+    Route::delete('/clients/{client}/addresses/{address}', [ServiceAddressController::class, 'destroy'])->name('clients.addresses.destroy');
+
+    // Contratos de Cliente
+    Route::get('/clients/{client}/contracts/create', [ContractController::class, 'create'])->name('contracts.create');
+    Route::post('/clients/{client}/contracts', [ContractController::class, 'store'])->name('contracts.store');
+    Route::patch('/contracts/{contract}/status', [ContractController::class, 'updateStatus'])->name('contracts.updateStatus');
+
+    // Facturación y Pagos
+    Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
+    Route::get('/billing/{client}/create-invoice', [BillingController::class, 'createInvoice'])->name('billing.createInvoice');
+    Route::post('/billing/{client}/store-invoice', [BillingController::class, 'storeInvoice'])->name('billing.storeInvoice');
+    Route::get('/invoices/{invoice}/payments/create', [PaymentController::class, 'create'])->name('payments.create');
+    Route::post('/invoices/{invoice}', [PaymentController::class, 'store'])->name('payments.store');
 });
 
 require __DIR__ . '/auth.php';
