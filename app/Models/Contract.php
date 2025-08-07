@@ -34,6 +34,7 @@ class Contract extends Model
     {
         return $this->belongsTo(Plan::class);
     }
+
     public function serviceAddress()
     {
         return $this->belongsTo(ServiceAddress::class);
@@ -46,5 +47,10 @@ class Contract extends Model
     public function invoices()
     {
         return $this->hasMany(Invoice::class, 'contrato_id');
+    }
+
+    public function prepaidPeriods()
+    {
+        return $this->hasMany(PrepaidPeriod::class);
     }
 }

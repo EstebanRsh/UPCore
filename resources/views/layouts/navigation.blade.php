@@ -24,6 +24,12 @@
                         <x-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.*')">
                             {{ __('Clientes') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('billing.index')" :active="request()->routeIs('billing.index')">
+                            {{ __('Facturación') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('promotions.index')" :active="request()->routeIs('promotions.*')">
+                            {{ __('Promociones') }}
+                        </x-nav-link>
                     @endif
                 </div>
             </div>
@@ -95,6 +101,12 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.*')">
                     {{ __('Clientes') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('billing.index')" :active="request()->routeIs('billing.index')">
+                    {{ __('Facturación') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('promotions.index')" :active="request()->routeIs('promotions.*')">
+                    {{ __('Promociones') }}
                 </x-responsive-nav-link>
             @endif
         </div>

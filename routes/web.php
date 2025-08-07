@@ -7,6 +7,9 @@ use App\Http\Controllers\UserApprovalController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ServiceAddressController;
 use App\Http\Controllers\ContractController;
+use App\Http\Controllers\BillingController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PromotionController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -38,6 +41,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/clients/{client}/contracts', [ContractController::class, 'store'])->name('contracts.store');
         Route::resource('contracts', ContractController::class)->except(['create', 'store']);
         Route::patch('/contracts/{contract}/status', [ContractController::class, 'updateStatus'])->name('contracts.updateStatus');
+        Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
+        Route::post('/billing/process-payment', [BillingController::class, 'processAdvancedPayment'])->name('billing.processPayment');
+        Route::get('/invoices/{invoice}/payments/create', [PaymentController::class, 'create'])->name('payments.create');
+        Route::post('/invoices/{invoice}', [PaymentController::class, 'store'])->name('payments.store');
+        Route::resource('promotions', PromotionController::class);
     });
 });
 
