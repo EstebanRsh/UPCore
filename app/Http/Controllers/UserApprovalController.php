@@ -28,8 +28,8 @@ class UserApprovalController extends Controller
                 'user_id' => $user->id,
                 'nombre' => $user->name,
                 'apellido' => '',
-                'dni_cuit' => '',
-                'telefono' => '',
+                'dni_cuit' => null,
+                'telefono' => null,
             ]);
         });
 

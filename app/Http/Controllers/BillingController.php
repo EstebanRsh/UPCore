@@ -6,9 +6,10 @@ use App\Models\Client;
 use App\Models\Contract;
 use App\Models\Payment;
 use App\Models\PrepaidPeriod;
+use App\Models\Promotion;
+use App\Jobs\GenerateMonthlyInvoices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\Promotion;
 use Carbon\Carbon;
 
 class BillingController extends Controller
@@ -113,5 +114,12 @@ class BillingController extends Controller
 
         return redirect()->route('billing.index', ['client_id' => $request->client_id])
             ->with('success', '¡Pago adelantado por ' . $mesesDuracion . ' meses registrado exitosamente!');
+    }
+    public function generateInvoices()
+    {
+        // Despachamos el trabajo a la cola
+        GenerateMonthlyInvoices::dispatch();
+
+        return redirect()->route('billing.index')->with('success', 'El proceso de generación de facturas ha comenzado. Puede tardar unos minutos en completarse.');
     }
 }

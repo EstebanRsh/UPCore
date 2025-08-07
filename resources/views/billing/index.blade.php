@@ -20,7 +20,19 @@
                             </button>
                         </div>
                     </form>
-
+                    <div class="mt-8 bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                        <div class="p-6 text-gray-900">
+                            <h3 class="text-lg font-medium mb-4">Acciones de Facturación</h3>
+                            <form action="{{ route('billing.generateInvoices') }}" method="POST"
+                                onsubmit="return confirm('¿Estás seguro de que quieres generar las facturas para el mes actual? Este proceso se ejecutará en segundo plano.');">
+                                @csrf
+                                <button type="submit"
+                                    class="bg-purple-600 hover:bg-purple-800 text-white font-bold py-2 px-4 rounded">
+                                    Generar Facturas del Mes
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                     <div class="mt-6 border-t pt-4">
                         @if ($searchTerm && $clients)
                             <h4 class="font-semibold mb-2">Resultados para "{{ $searchTerm }}":</h4>

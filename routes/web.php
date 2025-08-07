@@ -43,6 +43,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('/contracts/{contract}/status', [ContractController::class, 'updateStatus'])->name('contracts.updateStatus');
         Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
         Route::post('/billing/process-payment', [BillingController::class, 'processAdvancedPayment'])->name('billing.processPayment');
+
+        Route::post('/billing/generate-invoices', [BillingController::class, 'generateInvoices'])->name('billing.generateInvoices');
         Route::get('/invoices/{invoice}/payments/create', [PaymentController::class, 'create'])->name('payments.create');
         Route::post('/invoices/{invoice}', [PaymentController::class, 'store'])->name('payments.store');
         Route::resource('promotions', PromotionController::class);

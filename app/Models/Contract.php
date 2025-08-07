@@ -17,19 +17,11 @@ class Contract extends Model
         'estado',
     ];
 
-    /**
-     * Get the client that owns the contract.
-     * Relación Inversa N a 1 con Cliente
-     */
     public function client()
     {
         return $this->belongsTo(Client::class, 'cliente_id');
     }
 
-    /**
-     * Get the plan associated with the contract.
-     * Relación Inversa N a 1 con Plan
-     */
     public function plan()
     {
         return $this->belongsTo(Plan::class);
@@ -40,15 +32,18 @@ class Contract extends Model
         return $this->belongsTo(ServiceAddress::class);
     }
 
+    // --- AÑADE ESTA NUEVA FUNCIÓN ---
     /**
-     * Get the invoices for the contract.
-     * Relación 1 a N con Factura
+     * Un Contrato genera muchas Facturas.
      */
     public function invoices()
     {
         return $this->hasMany(Invoice::class, 'contrato_id');
     }
 
+    /**
+     * Un Contrato puede tener muchos períodos prepagados.
+     */
     public function prepaidPeriods()
     {
         return $this->hasMany(PrepaidPeriod::class);
