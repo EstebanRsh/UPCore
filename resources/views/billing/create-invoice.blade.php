@@ -15,21 +15,23 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label for="contract_id">Contrato a Cobrar</label>
+                                <label for="contract_id" class="block font-medium text-sm text-gray-700">Contrato a
+                                    Cobrar</label>
                                 <select name="contract_id" id="contract_id" class="block mt-1 w-full" required>
                                     <option value="">-- Seleccione un Contrato --</option>
                                     @foreach ($contracts as $contract)
                                         <option value="{{ $contract->id }}"
                                             data-monto="{{ $contract->plan->precio_mensual }}">
                                             #{{ $contract->id }} - {{ $contract->plan->nombre_plan }}
-                                            (${{ $contract->plan->precio_mensual }})
+                                            (${{ number_format($contract->plan->precio_mensual, 2) }})
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
 
                             <div>
-                                <label for="mes_servicio">Mes de Servicio</label>
+                                <label for="mes_servicio" class="block font-medium text-sm text-gray-700">Mes de
+                                    Servicio</label>
                                 <input type="month" name="mes_servicio" id="mes_servicio"
                                     value="{{ now()->format('Y-m') }}" class="block mt-1 w-full" required>
                             </div>
@@ -40,19 +42,24 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
-                                <label for="monto_pagado">Monto a Pagar</label>
+                                <label for="monto_pagado" class="block font-medium text-sm text-gray-700">Monto a
+                                    Pagar</label>
                                 <input type="number" step="0.01" name="monto_pagado" id="monto_pagado"
                                     class="block mt-1 w-full" required>
                             </div>
                             <div>
-                                <label for="metodo_pago">Método de Pago</label>
+                                <label for="metodo_pago" class="block font-medium text-sm text-gray-700">Método de
+                                    Pago</label>
                                 <select name="metodo_pago" id="metodo_pago" class="block mt-1 w-full" required>
                                     <option value="Efectivo">Efectivo</option>
                                     <option value="Transferencia">Transferencia</option>
+                                    <option value="Débito">Débito</option>
+                                    <option value="Crédito">Crédito</option>
                                 </select>
                             </div>
                             <div>
-                                <label for="fecha_pago">Fecha de Pago</label>
+                                <label for="fecha_pago" class="block font-medium text-sm text-gray-700">Fecha de
+                                    Pago</label>
                                 <input type="date" name="fecha_pago" id="fecha_pago"
                                     value="{{ now()->format('Y-m-d') }}" class="block mt-1 w-full" required>
                             </div>
@@ -71,4 +78,12 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.getElementById('contract_id').addEventListener('change', function() {
+            var selectedOption = this.options[this.selectedIndex];
+            var monto = selectedOption.getAttribute('data-monto');
+            document.getElementById('monto_pagado').value = monto;
+        });
+    </script>
 </x-app-layout>

@@ -21,8 +21,8 @@
                         </div>
                     </form>
 
-                    <div class="mt-6 border-t pt-4">
-                        @if ($searchTerm && $clients)
+                    @if ($searchTerm && $clients)
+                        <div class="mt-6 border-t pt-4">
                             <h4 class="font-semibold mb-2">Resultados para "{{ $searchTerm }}":</h4>
                             @if ($clients->isEmpty())
                                 <p>No se encontraron clientes.</p>
@@ -40,8 +40,8 @@
                                     @endforeach
                                 </ul>
                             @endif
-                        @endif
-                    </div>
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -62,16 +62,46 @@
                         <div class="space-y-6">
                             @forelse ($selectedClient->contracts as $contract)
                                 <div class="border rounded-lg p-4">
-                                    <div class="font-semibold">Contrato #{{ $contract->id }} - Plan:
-                                        {{ $contract->plan->nombre_plan }} ({{ $contract->estado }})</div>
-                                    @if ($contract->invoices->isNotEmpty())
-                                        <h4 class="text-md font-semibold mt-2">Facturas Pendientes:</h4>
-                                        <table class="min-w-full mt-2">
-                                        </table>
-                                    @else
-                                        <p class="mt-2 text-sm text-green-600">Este contrato está al día (sin facturas
-                                            pendientes).</p>
-                                    @endif
+                                    <h4 class="font-semibold">Contrato #{{ $contract->id }} - Plan:
+                                        {{ $contract->plan->nombre_plan }} ({{ $contract->estado }})</h4>
+                                    <div class="mt-2">
+                                        <h5 class="text-md font-medium mb-2">Historial de Facturas:</h5>
+                                        @if ($contract->invoices->isNotEmpty())
+                                            <table class="min-w-full text-sm">
+                                                <thead class="bg-gray-100">
+                                                    <tr>
+                                                        <th class="px-4 py-2 text-left">Periodo</th>
+                                                        <th class="px-4 py-2 text-left">Monto</th>
+                                                        <th class="px-4 py-2 text-left">Estado</th>
+                                                        <th class="px-4 py-2 text-left">Pagado el</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach ($contract->invoices as $invoice)
+                                                        <tr class="border-t">
+                                                            <td class="px-4 py-2">
+                                                                {{ \Carbon\Carbon::parse($invoice->fecha_emision)->format('m/Y') }}
+                                                            </td>
+                                                            <td class="px-4 py-2">
+                                                                ${{ number_format($invoice->monto, 2) }}</td>
+                                                            <td class="px-4 py-2">
+                                                                <span
+                                                                    class="px-2 py-1 font-semibold leading-tight rounded-full text-xs {{ $invoice->estado === 'Pagada' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800' }}">
+                                                                    {{ $invoice->estado }}
+                                                                </span>
+                                                            </td>
+                                                            <td class="px-4 py-2">
+                                                                {{ $invoice->payments->first() ? \Carbon\Carbon::parse($invoice->payments->first()->fecha_pago)->format('d/m/Y') : '---' }}
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        @else
+                                            <p class="mt-2 text-sm text-gray-500">Este contrato no tiene facturas
+                                                registradas.</p>
+                                        @endif
+                                    </div>
                                 </div>
                             @empty
                                 <p>Este cliente no tiene contratos activos.</p>

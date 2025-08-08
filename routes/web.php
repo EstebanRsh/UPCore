@@ -49,12 +49,17 @@ Route::middleware(['auth', 'verified', 'role:manager'])->group(function () {
     Route::post('/clients/{client}/contracts', [ContractController::class, 'store'])->name('contracts.store');
     Route::patch('/contracts/{contract}/status', [ContractController::class, 'updateStatus'])->name('contracts.updateStatus');
 
-    // Facturación y Pagos
-    Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
-    Route::get('/billing/{client}/create-invoice', [BillingController::class, 'createInvoice'])->name('billing.createInvoice');
-    Route::post('/billing/{client}/store-invoice', [BillingController::class, 'storeInvoice'])->name('billing.storeInvoice');
-    Route::get('/invoices/{invoice}/payments/create', [PaymentController::class, 'create'])->name('payments.create');
-    Route::post('/invoices/{invoice}', [PaymentController::class, 'store'])->name('payments.store');
+    // FACTURACIÓN MANUAL (NUEVA SECCIÓN SIMPLIFICADA)
+    Route::prefix('billing')->name('billing.')->group(function () {
+        // Página principal para buscar clientes y ver su estado de cuenta
+        Route::get('/', [BillingController::class, 'index'])->name('index');
+
+        // Muestra el formulario para generar un nuevo cobro a un cliente
+        Route::get('/{client}/create', [BillingController::class, 'createInvoice'])->name('createInvoice');
+
+        // Guarda el nuevo cobro (factura + pago)
+        Route::post('/{client}/store', [BillingController::class, 'storeInvoice'])->name('storeInvoice');
+    });
 });
 
 require __DIR__ . '/auth.php';

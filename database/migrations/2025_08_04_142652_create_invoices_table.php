@@ -13,11 +13,12 @@ return new class extends Migration
     {
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('contrato_id')->constrained('contracts');
+            $table->foreignId('contrato_id')->constrained('contracts')->onDelete('cascade');
             $table->date('fecha_emision');
             $table->date('fecha_vencimiento');
             $table->decimal('monto', 10, 2);
             $table->string('estado');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

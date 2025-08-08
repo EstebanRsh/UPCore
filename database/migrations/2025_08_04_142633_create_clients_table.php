@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('dni_cuit')->unique();
             $table->string('direccion_servicio');
             $table->string('telefono');
+            $table->softDeletes();
             $table->timestamps();
         });
     }
