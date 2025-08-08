@@ -29,11 +29,12 @@ Route::middleware(['auth', 'verified', 'role:manager'])->group(function () {
     // Gestiones Principales
     Route::resource('planes', PlanController::class);
     Route::resource('clients', ClientController::class);
-    Route::resource('promotions', PromotionController::class);
+    //Route::resource('promotions', PromotionController::class);
     Route::resource('contracts', ContractController::class)->except(['create', 'store']);
 
     // Aprobaciones
     Route::get('/approvals', [UserApprovalController::class, 'index'])->name('admin.approvals.index');
+    Route::post('/approvals/{user}/approve', [UserApprovalController::class, 'approve'])->name('approvals.approve');
     Route::patch('/approvals/{user}', [UserApprovalController::class, 'approve'])->name('admin.approvals.approve');
     Route::delete('/approvals/{user}', [UserApprovalController::class, 'reject'])->name('admin.approvals.reject');
 
