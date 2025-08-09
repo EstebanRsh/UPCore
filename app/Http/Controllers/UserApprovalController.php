@@ -9,42 +9,47 @@ use Illuminate\Support\Facades\DB;
 
 class UserApprovalController extends Controller
 {
+    /**
+     * Muestra la lista de usuarios con el rol 'pendiente'.
+     */
     public function index()
     {
+        // Tu lógica original, que es la correcta.
         $pendingUsers = User::where('rol', 'pendiente')->get();
+
         return view('admin.approvals.index', ['users' => $pendingUsers]);
     }
+
+    /**
+     * Aprueba un usuario, cambia su rol a 'cliente' y crea su perfil de cliente.
+     */
     public function approve(User $user)
     {
-        // Usamos una transacción para asegurar la integridad de los datos.
-        // O ambas operaciones tienen éxito, o ninguna lo tiene.
-        DB::transaction(function () use ($user) {
-
-            // 1. Actualizamos el rol del usuario a 'cliente'
-            $user->update(['rol' => 'cliente']);
-
-            // 2. Creamos su perfil de cliente asociado
-            Client::create([
-                'user_id' => $user->id,
-                'nombre' => $user->name,
-                'apellido' => '',
-                'dni_cuit' => null,
-                'telefono' => null,
-            ]);
-        });
-
-        return redirect()->route('admin.approvals.index')->with('success', '¡Usuario aprobado exitosamente!');
-    }
-    public function reject(User $user)
-    {
-        // Por seguridad, nos aseguramos de que solo se puedan eliminar usuarios pendientes.
-        if ($user->rol === 'pendiente') {
-            $user->delete();
-            return redirect()->route('admin.approvals.index')->with('success', '¡Usuario rechazado y eliminado exitosamente!');
+        // Verificación de seguridad: si el usuario no está pendiente, no hacemos nada.
+        if ($user->rol !== 'pendiente') {
+            return redirect()->route('approvals.index')->with('error', 'El usuario no se puede aprobar o ya fue aprobado.');
         }
 
-        // Si por alguna razón se intenta eliminar a un usuario que no está pendiente,
-        // redirigimos con un error.
-        return redirect()->route('admin.approvals.index')->with('error', 'Solo se pueden eliminar usuarios pendientes.');
+        try {
+            // ¡Transacción! O ambas operaciones tienen éxito, o ninguna lo tiene.
+            DB::transaction(function () use ($user) {
+                // 1. Actualizamos el rol del usuario a 'cliente'
+                $user->update(['rol' => 'cliente']);
+
+                // 2. Creamos su perfil de cliente asociado
+                Client::create([
+                    'user_id' => $user->id,
+                    'nombre' => $user->name,
+                    'apellido' => '',
+                    'email' => $user->email,
+                    'dni_cuit' => null,
+                    'telefono' => null,
+                ]);
+            });
+
+            return redirect()->route('approvals.index')->with('success', 'Usuario ' . $user->name . ' aprobado y convertido en cliente.');
+        } catch (\Exception $e) {
+            return redirect()->route('approvals.index')->with('error', 'Error al aprobar el usuario: ' . $e->getMessage());
+        }
     }
 }

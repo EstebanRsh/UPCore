@@ -24,7 +24,17 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
-
+//==============================================
+// RUTAS PARA CLIENTES
+//==============================================
+Route::middleware(['auth', 'verified', 'role:cliente'])->group(function () {
+    Route::get('/mis-pagos', function () {
+        return view('dashboard');
+    })->name('client.payments.index');
+});
+//==============================================
+// RUTAS PARA MANAGER
+//==============================================
 Route::middleware(['auth', 'verified', 'role:manager'])->group(function () {
     // Gestiones Principales
     Route::resource('planes', PlanController::class);
@@ -33,7 +43,7 @@ Route::middleware(['auth', 'verified', 'role:manager'])->group(function () {
     Route::resource('contracts', ContractController::class)->except(['create', 'store']);
 
     // Aprobaciones
-    Route::get('/approvals', [UserApprovalController::class, 'index'])->name('admin.approvals.index');
+    Route::get('/approvals', [UserApprovalController::class, 'index'])->name('approvals.index');
     Route::post('/approvals/{user}/approve', [UserApprovalController::class, 'approve'])->name('approvals.approve');
     Route::patch('/approvals/{user}', [UserApprovalController::class, 'approve'])->name('admin.approvals.approve');
     Route::delete('/approvals/{user}', [UserApprovalController::class, 'reject'])->name('admin.approvals.reject');
