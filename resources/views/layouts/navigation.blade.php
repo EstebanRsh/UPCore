@@ -43,7 +43,7 @@
                                 <x-slot name="content">
                                     <x-dropdown-link :href="route('clients.index')">Listado de Clientes</x-dropdown-link>
                                     <x-dropdown-link :href="route('approvals.index')">Aprobaciones</x-dropdown-link>
-                                    <x-dropdown-link :href="route('clients.create')">Nuevo Cliente</x-dropdown-link>
+                                     <x-dropdown-link :href="route('clients.create')">Nuevo Cliente</x-dropdown-link>
                                 </x-slot>
                             </x-dropdown>
                         </div>
