@@ -14,9 +14,21 @@ class ClientController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $clients = Client::with('user')->latest()->get();
+        $searchTerm = $request->input('search');
+
+        $clients = Client::query()
+            ->with('user') // Carga la relación con el usuario para evitar N+1
+            ->when($searchTerm, function ($query, $term) {
+                // Si hay un término de búsqueda, filtramos por él
+                return $query->where('nombre', 'like', "%{$term}%")
+                             ->orWhere('apellido', 'like', "%{$term}%")
+                             ->orWhere('dni_cuit', 'like', "%{$term}%");
+            })
+            ->latest() // Ordena por los más recientes primero
+            ->paginate(15); // ¡Aquí está la magia! Pagina los resultados de 15 en 15.
+
         return view('clients.manager.index', compact('clients'));
     }
 
