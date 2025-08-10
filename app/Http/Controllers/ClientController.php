@@ -14,18 +14,19 @@ class ClientController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+public function index(Request $request)
 {
     // 1. Obtenemos todos los posibles valores de los filtros
     $searchTerm = $request->input('search');
     $city = $request->input('city');
-    $sortBy = $request->input('sort_by', 'created_at'); // Por defecto, ordena por fecha de creación
-    $sortDirection = $request->input('sort_direction', 'desc'); // Por defecto, descendente
+    $dateFrom = $request->input('date_from');
+    $dateTo = $request->input('date_to');
+    $sortBy = $request->input('sort_by', 'created_at');
+    $sortDirection = $request->input('sort_direction', 'desc');
 
     $clients = Client::query()
         ->with('user')
         ->when($searchTerm, function ($query, $term) {
-            // Búsqueda general
             return $query->where(function ($q) use ($term) {
                 $q->where('nombre', 'like', "%{$term}%")
                   ->orWhere('apellido', 'like', "%{$term}%")
@@ -33,18 +34,21 @@ class ClientController extends Controller
             });
         })
         ->when($city, function ($query, $cityTerm) {
-            // Filtro por ciudad (a través de la dirección de servicio)
             return $query->whereHas('serviceAddresses', function ($q) use ($cityTerm) {
                 $q->where('ciudad', 'like', "%{$cityTerm}%");
             });
         })
-        ->orderBy($sortBy, $sortDirection) // Aplicamos el ordenamiento dinámico
+        // NUEVO: Filtro por rango de fechas
+        ->when($dateFrom && $dateTo, function ($query) use ($dateFrom, $dateTo) {
+            return $query->whereBetween('created_at', [$dateFrom, $dateTo]);
+        })
+        ->orderBy($sortBy, $sortDirection)
         ->paginate(15);
 
-    // 2. Devolvemos los clientes y también los valores de los filtros para que el formulario los recuerde
+    // Devolvemos los clientes y los filtros para que el formulario los recuerde
     return view('clients.manager.index', [
         'clients' => $clients,
-        'filters' => $request->all() // Pasamos todos los parámetros de la URL a la vista
+        'filters' => $request->all()
     ]);
 }
 
