@@ -7,24 +7,34 @@
         </div>
     </x-slot>
 
-    <div class="py-12">
+<div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
 
-                    <div x-data="{ open: {{ request()->has('city') || request()->has('date_from') ? 'true' : 'false' }} }">
+                    <div x-data="{ open: false }">
                         <form method="GET" action="{{ route('clients.index') }}">
-                            <div class="flex items-center mb-4">
+                            <div class="flex flex-col sm:flex-row items-center gap-4 mb-4">
                                 <input type="text" name="search" placeholder="Buscar por nombre, apellido o DNI..."
                                     class="w-full sm:w-2/5 rounded-md shadow-sm border-gray-300"
                                     value="{{ $filters['search'] ?? '' }}">
-                                <button type="button" @click="open = !open" class="ml-4 text-sm font-medium text-indigo-600 hover:text-indigo-800">
+
+                                <button type="button" @click="open = !open" class="text-sm font-medium text-indigo-600 hover:text-indigo-800 whitespace-nowrap">
                                     Filtros Avanzados
                                     <span x-text="open ? '▲' : '▼'" class="ml-1"></span>
                                 </button>
+
+                                <div class="flex-grow flex justify-start sm:justify-end gap-2">
+                                    <button type="submit" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-md text-sm">
+                                        Filtrar
+                                    </button>
+                                    <a href="{{ route('clients.index') }}" class="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 font-bold rounded-md text-sm border">
+                                        Limpiar
+                                    </a>
+                                </div>
                             </div>
 
-                            <div x-show="open" x-transition class="bg-gray-50 p-4 rounded-lg border mb-6">
+                            <div x-show="open" x-transition class="bg-gray-50 p-4 rounded-lg border">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     <div>
                                         <label for="city" class="text-sm font-medium text-gray-700">Ciudad</label>
@@ -55,12 +65,6 @@
                                             <option value="asc" @selected(($filters['sort_direction'] ?? '') === 'asc')>Ascendente</option>
                                         </select>
                                     </div>
-                                </div>
-                                <div class="mt-4 text-right">
-                                    <a href="{{ route('clients.index') }}" class="text-sm text-gray-600 hover:underline mr-4">Limpiar filtros</a>
-                                    <button type="submit" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-md text-sm">
-                                        Filtrar
-                                    </button>
                                 </div>
                             </div>
                         </form>
