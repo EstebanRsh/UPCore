@@ -1,29 +1,19 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight mb-4 sm:mb-0">
-                Listado de Clientes
+        <div class="flex justify-between items-center">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                Gestión de Clientes
             </h2>
-        </div>
-    </x-slot>
-
-<div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-
-                    <div x-data="{ open: false }">
+            <div x-data="{ open: false }">
                         <form method="GET" action="{{ route('clients.index') }}">
                             <div class="flex flex-col sm:flex-row items-center gap-4 mb-4">
                                 <input type="text" name="search" placeholder="Buscar por nombre, apellido o DNI..."
                                     class="w-full sm:w-2/5 rounded-md shadow-sm border-gray-300"
                                     value="{{ $filters['search'] ?? '' }}">
-
                                 <button type="button" @click="open = !open" class="text-sm font-medium text-indigo-600 hover:text-indigo-800 whitespace-nowrap">
                                     Filtros Avanzados
                                     <span x-text="open ? '▲' : '▼'" class="ml-1"></span>
                                 </button>
-
                                 <div class="flex-grow flex justify-start sm:justify-end gap-2">
                                     <button type="submit" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-md text-sm">
                                         Filtrar
@@ -69,8 +59,22 @@
                             </div>
                         </form>
                     </div>
+        </div>
+    </x-slot>
 
-                    <div class="overflow-x-auto">
+<div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                    <h3 class="font-semibold text-lg text-gray-800 leading-tight">
+                        Listado de Clientes
+                    </h3>
+                </div>
+                <div class="p-6 text-gray-900">
+
+                    
+
+                    <div class="overflow-x-auto mt-6">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
