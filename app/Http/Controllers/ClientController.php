@@ -17,7 +17,7 @@ class ClientController extends Controller
     public function index()
     {
         $clients = Client::with('user')->latest()->get();
-        return view('admin.clients.index', compact('clients'));
+        return view('clients.manager.index', compact('clients'));
     }
 
     /**
@@ -26,7 +26,7 @@ class ClientController extends Controller
     public function create()
     {
                 // Simplemente muestra la vista del formulario de creación.
-        return view('admin.clients.create');
+        return view('clients.manager.create');
     }
 
     /**
@@ -85,7 +85,7 @@ public function store(Request $request)
         // Cargamos las relaciones para tener acceso a los datos del usuario y sus direcciones
         $client->load('user', 'serviceAddresses', 'contracts.plan');
 
-        return view('clients.show', ['client' => $client]);
+        return view('clients.manager.show', ['client' => $client]);
     }
 
     /**
@@ -93,7 +93,7 @@ public function store(Request $request)
      */
     public function edit(Client $client)
     {
-        return view('clients.edit', ['client' => $client]);
+        return view('clients.manager.edit', ['client' => $client]);
     }
 
     /**

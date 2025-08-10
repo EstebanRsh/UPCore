@@ -28,9 +28,9 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $client->email }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $client->telefono ?? 'N/A' }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    {{-- CAMBIOS AQUÍ: Enlaces funcionales --}}
                     <a href="{{ route('clients.show', $client) }}" class="text-indigo-600 hover:text-indigo-900">Ver</a>
                     <a href="{{ route('clients.edit', $client) }}" class="ml-4 text-yellow-600 hover:text-yellow-900">Editar</a>
+                </td>
                 </td>
             </tr>
         @endforeach

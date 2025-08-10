@@ -17,7 +17,7 @@ class UserApprovalController extends Controller
         // Tu lógica original, que es la correcta.
         $pendingUsers = User::where('rol', 'pendiente')->get();
 
-        return view('admin.approvals.index', ['users' => $pendingUsers]);
+        return view('approvals.index', ['users' => $pendingUsers]);
     }
 
     /**
