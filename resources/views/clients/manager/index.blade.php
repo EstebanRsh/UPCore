@@ -13,13 +13,42 @@
                 <div class="p-6 text-gray-900">
 
                     <form method="GET" action="{{ route('clients.index') }}">
-                        <div class="flex items-center mb-6">
-                            <input type="text" name="search" placeholder="Buscar por nombre, apellido o DNI..."
-                                class="w-full sm:w-1/3 rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                value="{{ request('search') }}">
-                            <button type="submit" class="ml-4 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-md text-sm">
-                                Buscar
-                            </button>
+                        <div class="bg-gray-50 p-4 rounded-lg mb-6 border">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div>
+                                    <label for="search" class="text-sm font-medium text-gray-700">Buscar</label>
+                                    <input type="text" name="search" id="search" placeholder="Nombre, Apellido, DNI..."
+                                        class="mt-1 w-full rounded-md shadow-sm border-gray-300"
+                                        value="{{ $filters['search'] ?? '' }}">
+                                </div>
+                                <div>
+                                    <label for="city" class="text-sm font-medium text-gray-700">Ciudad</label>
+                                    <input type="text" name="city" id="city" placeholder="Ej: Paraná"
+                                        class="mt-1 w-full rounded-md shadow-sm border-gray-300"
+                                        value="{{ $filters['city'] ?? '' }}">
+                                </div>
+                                <div>
+                                    <label for="sort_by" class="text-sm font-medium text-gray-700">Ordenar por</label>
+                                    <select name="sort_by" id="sort_by" class="mt-1 w-full rounded-md shadow-sm border-gray-300">
+                                        <option value="created_at" @selected(($filters['sort_by'] ?? '') === 'created_at')>Fecha de Registro</option>
+                                        <option value="nombre" @selected(($filters['sort_by'] ?? '') === 'nombre')>Nombre</option>
+                                        <option value="apellido" @selected(($filters['sort_by'] ?? '') === 'apellido')>Apellido</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="sort_direction" class="text-sm font-medium text-gray-700">Dirección</label>
+                                    <select name="sort_direction" id="sort_direction" class="mt-1 w-full rounded-md shadow-sm border-gray-300">
+                                        <option value="desc" @selected(($filters['sort_direction'] ?? '') === 'desc')>Descendente</option>
+                                        <option value="asc" @selected(($filters['sort_direction'] ?? '') === 'asc')>Ascendente</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-right">
+                                <a href="{{ route('clients.index') }}" class="text-sm text-gray-600 hover:underline mr-4">Limpiar filtros</a>
+                                <button type="submit" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-md text-sm">
+                                    Filtrar
+                                </button>
+                            </div>
                         </div>
                     </form>
 

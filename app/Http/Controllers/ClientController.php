@@ -15,22 +15,38 @@ class ClientController extends Controller
      * Display a listing of the resource.
      */
     public function index(Request $request)
-    {
-        $searchTerm = $request->input('search');
+{
+    // 1. Obtenemos todos los posibles valores de los filtros
+    $searchTerm = $request->input('search');
+    $city = $request->input('city');
+    $sortBy = $request->input('sort_by', 'created_at'); // Por defecto, ordena por fecha de creación
+    $sortDirection = $request->input('sort_direction', 'desc'); // Por defecto, descendente
 
-        $clients = Client::query()
-            ->with('user') // Carga la relación con el usuario para evitar N+1
-            ->when($searchTerm, function ($query, $term) {
-                // Si hay un término de búsqueda, filtramos por él
-                return $query->where('nombre', 'like', "%{$term}%")
-                             ->orWhere('apellido', 'like', "%{$term}%")
-                             ->orWhere('dni_cuit', 'like', "%{$term}%");
-            })
-            ->latest() // Ordena por los más recientes primero
-            ->paginate(15); // ¡Aquí está la magia! Pagina los resultados de 15 en 15.
+    $clients = Client::query()
+        ->with('user')
+        ->when($searchTerm, function ($query, $term) {
+            // Búsqueda general
+            return $query->where(function ($q) use ($term) {
+                $q->where('nombre', 'like', "%{$term}%")
+                  ->orWhere('apellido', 'like', "%{$term}%")
+                  ->orWhere('dni_cuit', 'like', "%{$term}%");
+            });
+        })
+        ->when($city, function ($query, $cityTerm) {
+            // Filtro por ciudad (a través de la dirección de servicio)
+            return $query->whereHas('serviceAddresses', function ($q) use ($cityTerm) {
+                $q->where('ciudad', 'like', "%{$cityTerm}%");
+            });
+        })
+        ->orderBy($sortBy, $sortDirection) // Aplicamos el ordenamiento dinámico
+        ->paginate(15);
 
-        return view('clients.manager.index', compact('clients'));
-    }
+    // 2. Devolvemos los clientes y también los valores de los filtros para que el formulario los recuerde
+    return view('clients.manager.index', [
+        'clients' => $clients,
+        'filters' => $request->all() // Pasamos todos los parámetros de la URL a la vista
+    ]);
+}
 
     /**
      * Show the form for creating a new resource.
