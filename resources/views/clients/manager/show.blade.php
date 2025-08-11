@@ -1,151 +1,102 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Detalles del Cliente: {{ $client->nombre }} {{ $client->apellido }}
-        </h2>
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                    Perfil del Cliente
+                </h2>
+                <p class="text-sm text-gray-500 mt-1">
+                    Vista detallada de {{ $client->nombre }} {{ $client->apellido }}
+                </p>
+            </div>
+            <a href="{{ route('clients.index') }}" class="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 font-bold rounded-md text-sm border">
+                &larr; Volver al Listado
+            </a>
+        </div>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            @if (session('success'))
-                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
-                    <p class="font-bold">Éxito</p>
-                    <p>{{ session('success') }}</p>
-                </div>
-            @endif
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                <div class="p-6 text-gray-900">
-                    <h3 class="text-lg font-medium mb-4">Información Personal</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><strong>Nombre:</strong> {{ $client->nombre }}</div>
-                        <div><strong>Apellido:</strong> {{ $client->apellido ?: 'No especificado' }}</div>
-                        <div><strong>Email:</strong> {{ $client->user->email }}</div>
-                        <div><strong>DNI/CUIT:</strong> {{ $client->dni_cuit ?: 'No especificado' }}</div>
-                        <div><strong>Teléfono:</strong> {{ $client->telefono ?: 'No especificado' }}</div>
-                    </div>
-                    <div class="flex justify-end mt-4">
-                        <a href="{{ route('clients.edit', $client) }}"
-                            class="bg-amber-500 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded">Editar
-                            Información</a>
-                        <form action="{{ route('clients.destroy', $client) }}" method="POST"
-                            onsubmit="return confirm('¿Estás seguro de que quieres dar de baja a este cliente? Esta acción desactivará su acceso y lo ocultará de las listas, pero su historial se conservará.');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit"
-                                class="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 rounded">
-                                Dar de Baja
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                <div class="p-6 text-gray-900">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-medium">Direcciones de Servicio</h3>
-                        <a href="{{ route('clients.addresses.create', $client) }}"
-                            class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Añadir
-                            Dirección</a>
-                    </div>
-
-                    @forelse($client->serviceAddresses as $address)
-                        <div class="border-t p-4 flex justify-between items-center">
-                            <div>
-                                <p><strong>Etiqueta:</strong> {{ $address->etiqueta }}</p>
-                                <p>{{ $address->direccion }},
-                                    {{ $address->departamento ? $address->departamento . ',' : '' }}
-                                    {{ $address->ciudad }}</p>
-                                @if ($address->notas)
-                                    <p class="text-sm text-gray-600 mt-2"><strong>Notas:</strong> {{ $address->notas }}
-                                    </p>
-                                @endif
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <a href="{{ route('clients.addresses.edit', ['client' => $client, 'address' => $address]) }}"
-                                    class="bg-amber-500 hover:bg-amber-700 text-white font-bold py-1 px-3 rounded text-xs">
-                                    Editar
-                                </a>
-                                <form
-                                    action="{{ route('clients.addresses.destroy', ['client' => $client, 'address' => $address]) }}"
-                                    method="POST"
-                                    onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta dirección?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                        class="bg-red-600 hover:bg-red-800 text-white font-bold py-1 px-3 rounded text-xs">
-                                        Eliminar
-                                    </button>
-                                </form>
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                        <div class="p-6">
+                            <h3 class="font-semibold text-lg text-gray-800 border-b pb-3 mb-4">Información de Contacto</h3>
+                            <div class="space-y-3 text-sm">
+                                <p><strong>DNI/CUIT:</strong> {{ $client->dni_cuit }}</p>
+                                <p><strong>Email:</strong> {{ $client->email }}</p>
+                                <p><strong>Teléfono:</strong> {{ $client->telefono ?? 'No especificado' }}</p>
+                                <p><strong>Cliente desde:</strong> {{ $client->created_at->format('d/m/Y') }}</p>
                             </div>
                         </div>
-                    @empty
-                        <p class="text-gray-500">Este cliente aún no tiene direcciones de servicio registradas.</p>
-                    @endforelse
-                </div>
-            </div>
-
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-medium">Contratos del Cliente</h3>
-                        <a href="{{ route('contracts.create', $client) }}"
-                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Crear
-                            Contrato</a>
-
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full bg-white">
-                            <thead class="bg-gray-800 text-white">
-                                <tr>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Plan Contratado</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Fecha de Instalación</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Estado</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody class="text-gray-700">
-                                @forelse($client->contracts as $contract)
-                                    <tr>
-                                        <td class="py-3 px-4">{{ $contract->plan->nombre_plan }}</td>
-                                        <td class="py-3 px-4">
-                                            {{ \Carbon\Carbon::parse($contract->fecha_instalacion)->format('d/m/Y') }}
-                                        </td>
-                                        <td class="py-3 px-4">
-                                            @php
-                                                $color = '';
-                                                if ($contract->estado === 'Activo') {
-                                                    $color = 'bg-green-200 text-green-800';
-                                                } elseif ($contract->estado === 'Suspendido') {
-                                                    $color = 'bg-yellow-200 text-yellow-800';
-                                                } elseif ($contract->estado === 'Cancelado') {
-                                                    $color = 'bg-red-200 text-red-800';
-                                                }
-                                            @endphp
-                                            <span
-                                                class="px-2 py-1 font-semibold leading-tight rounded-full text-xs {{ $color }}">
-                                                {{ $contract->estado }}
-                                            </span>
-                                        </td>
-                                        <td class="py-3 px-4">
-                                            <a href="{{ route('contracts.show', $contract) }}"
-                                                class="text-indigo-600 hover:text-indigo-900">Ver</a>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="4" class="py-3 px-4 text-center">Este cliente aún no tiene
-                                            contratos.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                        <div class="p-6">
+                            <h3 class="font-semibold text-lg text-gray-800 border-b pb-3 mb-4">Acciones</h3>
+                            <div class="space-y-3">
+                                <a href="{{ route('billing.createInvoice', $client) }}" class="block w-full text-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-md text-sm">Generar Cobro Manual</a>
+                                <a href="{{ route('clients.edit', $client) }}" class="block w-full text-center px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-bold rounded-md text-sm">Editar Cliente</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                        <div class="p-6">
+                            <h3 class="font-semibold text-lg text-gray-800 border-b pb-3 mb-4">Contratos Activos</h3>
+                            @forelse($client->contracts as $contract)
+                                <div class="p-4 border rounded-md mb-3">
+                                    <div class="flex justify-between items-center">
+                                        <p class="font-bold">{{ $contract->plan->nombre_plan }}</p>
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $contract->estado === 'Activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                            {{ $contract->estado }}
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1">Dirección: {{ $client->serviceAddresses->first()->direccion ?? 'No especificada' }}</p>
+                                </div>
+                            @empty
+                                <p class="text-sm text-gray-500">Este cliente no tiene contratos registrados.</p>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                        <div class="p-6">
+                            <h3 class="font-semibold text-lg text-gray-800 border-b pb-3 mb-4">Últimas Facturas</h3>
+                            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left">Periodo</th>
+                                        <th class="px-4 py-2 text-left">Monto</th>
+                                        <th class="px-4 py-2 text-left">Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($client->contracts->flatMap->invoices as $invoice)
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-4 py-2">{{ \Carbon\Carbon::parse($invoice->fecha_emision)->format('m/Y') }}</td>
+                                            <td class="px-4 py-2">${{ number_format($invoice->monto, 2) }}</td>
+                                            <td class="px-4 py-2">
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $invoice->estado === 'Pagada' ? 'bg-green-100 text-green-800' : 'bg-yellow-200 text-yellow-800' }}">
+                                                    {{ $invoice->estado }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="3" class="px-4 py-6 text-center text-gray-500">No hay facturas para mostrar.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
         </div>
     </div>
 </x-app-layout>

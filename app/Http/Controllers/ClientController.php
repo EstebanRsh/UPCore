@@ -113,10 +113,12 @@ public function store(Request $request)
      */
     public function show(Client $client)
     {
-        // Cargamos las relaciones para tener acceso a los datos del usuario y sus direcciones
-        $client->load('user', 'serviceAddresses', 'contracts.plan');
+        // Cargamos todas las relaciones necesarias de una sola vez (Eager Loading)
+        $client->load(['user', 'contracts.plan', 'serviceAddresses', 'contracts.invoices' => function ($query) {
+            $query->orderBy('fecha_emision', 'desc')->limit(10); // Cargamos las últimas 10 facturas
+        }]);
 
-        return view('clients.manager.show', ['client' => $client]);
+        return view('clients.manager.show', compact('client'));
     }
 
     /**
