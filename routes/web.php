@@ -60,6 +60,8 @@ Route::middleware(['auth', 'verified', 'role:manager'])->group(function () {
     Route::post('/clients/{client}/contracts', [ContractController::class, 'store'])->name('contracts.store');
     Route::patch('/contracts/{contract}/status', [ContractController::class, 'updateStatus'])->name('contracts.updateStatus');
 
+    // GESTIÓN DE NOTAS DE CLIENTES
+Route::post('/clients/{client}/notes', [\App\Http\Controllers\ClientNoteController::class, 'store'])->name('clients.notes.store');
     // FACTURACIÓN MANUAL (NUEVA SECCIÓN SIMPLIFICADA)
     Route::prefix('billing')->name('billing.')->group(function () {
         // Página principal para buscar clientes y ver su estado de cuenta

@@ -111,15 +111,15 @@ public function store(Request $request)
     /**
      * Display the specified resource.
      */
-    public function show(Client $client)
-    {
-        // Cargamos todas las relaciones necesarias de una sola vez (Eager Loading)
-        $client->load(['user', 'contracts.plan', 'serviceAddresses', 'contracts.invoices' => function ($query) {
-            $query->orderBy('fecha_emision', 'desc')->limit(10); // Cargamos las últimas 10 facturas
-        }]);
+public function show(Client $client)
+{
+    // Añadimos 'notes.user' para cargar las notas y el manager que las escribió
+    $client->load(['user', 'contracts.plan', 'serviceAddresses', 'notes.user', 'contracts.invoices' => function ($query) {
+        $query->orderBy('fecha_emision', 'desc')->limit(10);
+    }]);
 
-        return view('clients.manager.show', compact('client'));
-    }
+    return view('clients.manager.show', compact('client'));
+}
 
     /**
      * Show the form for editing the specified resource.

@@ -41,4 +41,8 @@ class Client extends Model
     {
         return $this->hasMany(Contract::class, 'cliente_id');
     }
+    public function notes()
+{
+    return $this->hasMany(ClientNote::class)->latest(); // Las ordenamos por la más reciente
+}
 }
