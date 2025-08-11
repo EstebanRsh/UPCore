@@ -18,6 +18,7 @@ class Client extends Model
         'apellido', // 
         'dni_cuit', // 
         'telefono', // 
+        'email',
     ];
 
     /**
@@ -42,7 +43,11 @@ class Client extends Model
         return $this->hasMany(Contract::class, 'cliente_id');
     }
     public function notes()
-{
-    return $this->hasMany(ClientNote::class)->latest(); // Las ordenamos por la más reciente
-}
+    {
+        return $this->hasMany(ClientNote::class)->latest();
+    }
+    public function invoices()
+    {
+        return $this->hasManyThrough(Invoice::class, Contract::class, 'cliente_id', 'contrato_id');
+    }
 }

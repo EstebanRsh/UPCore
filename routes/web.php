@@ -61,9 +61,11 @@ Route::middleware(['auth', 'verified', 'role:manager'])->group(function () {
     Route::patch('/contracts/{contract}/status', [ContractController::class, 'updateStatus'])->name('contracts.updateStatus');
 
     // GESTIÓN DE NOTAS DE CLIENTES
-Route::post('/clients/{client}/notes', [\App\Http\Controllers\ClientNoteController::class, 'store'])->name('clients.notes.store');
-Route::put('/notes/{note}', [\App\Http\Controllers\ClientNoteController::class, 'update'])->name('clients.notes.update');
-Route::delete('/notes/{note}', [\App\Http\Controllers\ClientNoteController::class, 'destroy'])->name('clients.notes.destroy');
+    Route::post('/clients/{client}/notes', [\App\Http\Controllers\ClientNoteController::class, 'store'])->name('clients.notes.store');
+    Route::put('/notes/{note}', [\App\Http\Controllers\ClientNoteController::class, 'update'])->name('clients.notes.update');
+    Route::delete('/notes/{note}', [\App\Http\Controllers\ClientNoteController::class, 'destroy'])->name('clients.notes.destroy');
+    // GESTIÓN DE FACTURAS
+    Route::get('/invoices/{invoice}/pdf', [\App\Http\Controllers\InvoiceController::class, 'showPdf'])->name('invoices.pdf');
     // FACTURACIÓN MANUAL (NUEVA SECCIÓN SIMPLIFICADA)
     Route::prefix('billing')->name('billing.')->group(function () {
         // Página principal para buscar clientes y ver su estado de cuenta

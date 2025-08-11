@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\Validation\Rule;
 
 class ClientController extends Controller
 {
@@ -16,39 +17,39 @@ class ClientController extends Controller
      */
     public function index(Request $request)
     {
-$filters = $request->all();
-    $searchTerm = $request->input('search');
-    $city = $request->input('city');
-    $dateFrom = $request->input('date_from');
-    $dateTo = $request->input('date_to');
-    $sortBy = $request->input('sort_by', 'created_at');
-    $sortDirection = $request->input('sort_direction', 'desc');
+        $filters = $request->all();
+        $searchTerm = $request->input('search');
+        $city = $request->input('city');
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
 
-    $clients = Client::query()
-        ->with(['user', 'contracts' => function ($query) {
-            $query->latest()->limit(1); // Carga solo el contrato más reciente
-        }, 'serviceAddresses' => function ($query) {
-            $query->limit(1); // Carga solo la primera dirección de servicio
-        }])
-        ->when($searchTerm, function ($query, $term) {
-            return $query->where(function ($q) use ($term) {
-                $q->where('nombre', 'like', "%{$term}%")
-                  ->orWhere('apellido', 'like', "%{$term}%")
-                  ->orWhere('dni_cuit', 'like', "%{$term}%");
-            });
-        })
-        ->when($city, function ($query, $cityTerm) {
-            return $query->whereHas('serviceAddresses', function ($q) use ($cityTerm) {
-                $q->where('ciudad', 'like', "%{$cityTerm}%");
-            });
-        })
-        ->when($dateFrom && $dateTo, function ($query) use ($dateFrom, $dateTo) {
-            return $query->whereBetween('created_at', [$dateFrom, $dateTo]);
-        })
-        ->orderBy($sortBy, $sortDirection)
-        ->paginate(15);
+        $clients = Client::query()
+            ->with(['user', 'contracts' => function ($query) {
+                $query->latest()->limit(1); // Carga solo el contrato más reciente
+            }, 'serviceAddresses' => function ($query) {
+                $query->limit(1); // Carga solo la primera dirección de servicio
+            }])
+            ->when($searchTerm, function ($query, $term) {
+                return $query->where(function ($q) use ($term) {
+                    $q->where('nombre', 'like', "%{$term}%")
+                        ->orWhere('apellido', 'like', "%{$term}%")
+                        ->orWhere('dni_cuit', 'like', "%{$term}%");
+                });
+            })
+            ->when($city, function ($query, $cityTerm) {
+                return $query->whereHas('serviceAddresses', function ($q) use ($cityTerm) {
+                    $q->where('ciudad', 'like', "%{$cityTerm}%");
+                });
+            })
+            ->when($dateFrom && $dateTo, function ($query) use ($dateFrom, $dateTo) {
+                return $query->whereBetween('created_at', [$dateFrom, $dateTo]);
+            })
+            ->orderBy($sortBy, $sortDirection)
+            ->paginate(15);
 
-    return view('clients.manager.index', compact('clients', 'filters'));
+        return view('clients.manager.index', compact('clients', 'filters'));
     }
 
     /**
@@ -56,22 +57,22 @@ $filters = $request->all();
      */
     public function create()
     {
-                // Simplemente muestra la vista del formulario de creación.
+        // Simplemente muestra la vista del formulario de creación.
         return view('clients.manager.create');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-public function store(Request $request)
+    public function store(Request $request)
     {
         // 1. Validamos todos los datos de una vez.
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'apellido' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'dni_cuit' => ['required', 'string', 'max:255', 'unique:'.Client::class],
+            'dni_cuit' => ['required', 'string', 'max:255', 'unique:' . Client::class],
             'telefono' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -95,7 +96,6 @@ public function store(Request $request)
                     'telefono' => $validated['telefono'],
                 ]);
             });
-
         } catch (\Exception $e) {
             // Si algo falla, volvemos con un error.
             return redirect()->back()
@@ -111,15 +111,30 @@ public function store(Request $request)
     /**
      * Display the specified resource.
      */
-public function show(Client $client)
-{
-    // Añadimos 'notes.user' para cargar las notas y el manager que las escribió
-    $client->load(['user', 'contracts.plan', 'serviceAddresses', 'notes.user', 'contracts.invoices' => function ($query) {
-        $query->orderBy('fecha_emision', 'desc')->limit(10);
-    }]);
+    public function show(Request $request, Client $client)
+    {
+        $client->load(['user', 'contracts.plan', 'serviceAddresses', 'notes.user']);
+        $invoiceFilters = $request->only(['invoice_status', 'invoice_period']);
 
-    return view('clients.manager.show', compact('client'));
-}
+        $invoices = $client->invoices()
+            ->when($request->input('invoice_status'), function ($query, $status) {
+                return $query->where('estado', $status);
+            })
+            ->when($request->input('invoice_period'), function ($query, $period) {
+                try {
+                    $date = \Carbon\Carbon::parse($period);
+                    return $query->whereYear('fecha_emision', $date->year)
+                        ->whereMonth('fecha_emision', $date->month);
+                } catch (\Exception $e) {
+                    return $query;
+                }
+            })
+            ->orderBy('fecha_emision', 'desc')
+            ->paginate(10, ['*'], 'invoicesPage');
+
+        // La línea clave: pasamos 'invoices' y 'invoiceFilters' a la vista
+        return view('clients.manager.show', compact('client', 'invoices', 'invoiceFilters'));
+    }
 
     /**
      * Show the form for editing the specified resource.
