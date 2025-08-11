@@ -14,9 +14,9 @@ class ClientController extends Controller
     /**
      * Display a listing of the resource.
      */
-public function index(Request $request)
-{
-    // 1. Obtenemos todos los posibles valores de los filtros
+    public function index(Request $request)
+    {
+$filters = $request->all();
     $searchTerm = $request->input('search');
     $city = $request->input('city');
     $dateFrom = $request->input('date_from');
@@ -25,7 +25,11 @@ public function index(Request $request)
     $sortDirection = $request->input('sort_direction', 'desc');
 
     $clients = Client::query()
-        ->with('user')
+        ->with(['user', 'contracts' => function ($query) {
+            $query->latest()->limit(1); // Carga solo el contrato más reciente
+        }, 'serviceAddresses' => function ($query) {
+            $query->limit(1); // Carga solo la primera dirección de servicio
+        }])
         ->when($searchTerm, function ($query, $term) {
             return $query->where(function ($q) use ($term) {
                 $q->where('nombre', 'like', "%{$term}%")
@@ -38,19 +42,14 @@ public function index(Request $request)
                 $q->where('ciudad', 'like', "%{$cityTerm}%");
             });
         })
-        // NUEVO: Filtro por rango de fechas
         ->when($dateFrom && $dateTo, function ($query) use ($dateFrom, $dateTo) {
             return $query->whereBetween('created_at', [$dateFrom, $dateTo]);
         })
         ->orderBy($sortBy, $sortDirection)
         ->paginate(15);
 
-    // Devolvemos los clientes y los filtros para que el formulario los recuerde
-    return view('clients.manager.index', [
-        'clients' => $clients,
-        'filters' => $request->all()
-    ]);
-}
+    return view('clients.manager.index', compact('clients', 'filters'));
+    }
 
     /**
      * Show the form for creating a new resource.
