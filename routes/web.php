@@ -62,6 +62,8 @@ Route::middleware(['auth', 'verified', 'role:manager'])->group(function () {
 
     // GESTIÓN DE NOTAS DE CLIENTES
 Route::post('/clients/{client}/notes', [\App\Http\Controllers\ClientNoteController::class, 'store'])->name('clients.notes.store');
+Route::put('/notes/{note}', [\App\Http\Controllers\ClientNoteController::class, 'update'])->name('clients.notes.update');
+Route::delete('/notes/{note}', [\App\Http\Controllers\ClientNoteController::class, 'destroy'])->name('clients.notes.destroy');
     // FACTURACIÓN MANUAL (NUEVA SECCIÓN SIMPLIFICADA)
     Route::prefix('billing')->name('billing.')->group(function () {
         // Página principal para buscar clientes y ver su estado de cuenta

@@ -41,6 +41,56 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                        <div class="p-6">
+                            <h3 class="font-semibold text-lg text-gray-800 border-b pb-3 mb-4">Bitácora / Notas</h3>
+                            <form action="{{ route('clients.notes.store', $client) }}" method="POST" class="mb-4">
+                                @csrf
+                                <textarea name="note" rows="3" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm" placeholder="Añadir una nueva nota sobre el cliente..." required></textarea>
+                                <div class="text-right mt-2">
+                                    <button type="submit" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-md text-xs">Guardar Nota</button>
+                                </div>
+                            </form>
+                            
+                            <div class="space-y-4 max-h-96 overflow-y-auto pr-2">
+                                @forelse($client->notes as $note)
+                                    <div class="p-3 bg-gray-50 rounded-lg border text-sm" x-data="{ editing: false, noteContent: `{{ $note->note }}` }">
+                                        <div x-show="!editing">
+                                            <p class="text-gray-700 whitespace-pre-wrap">{{ $note->note }}</p>
+                                        </div>
+                                        <div x-show="editing" style="display: none;">
+                                            <form action="{{ route('clients.notes.update', $note) }}" method="POST">
+                                                @csrf
+                                                @method('PUT')
+                                                <textarea name="note" rows="3" class="w-full border-gray-300 rounded-md shadow-sm text-sm" x-model="noteContent"></textarea>
+                                                <div class="text-right mt-2 space-x-2">
+                                                    <button type="button" @click="editing = false; noteContent = `{{ $note->note }}`" class="px-3 py-1.5 bg-white text-gray-700 border rounded-md text-xs">Cancelar</button>
+                                                    <button type="submit" class="px-3 py-1.5 bg-indigo-600 text-white rounded-md text-xs">Guardar</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        
+                                        <div class="flex justify-between items-center mt-2">
+                                            <p class="text-xs text-gray-500">
+                                                Por <strong>{{ $note->user->name }}</strong> el {{ $note->created_at->format('d/m/y H:i') }}
+                                            </p>
+                                            <div class="flex items-center gap-2" x-show="!editing">
+                                                <button @click="editing = true" class="text-xs text-yellow-600 hover:underline">Editar</button>
+                                                <form action="{{ route('clients.notes.destroy', $note) }}" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar esta nota?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="text-xs text-red-600 hover:underline">Eliminar</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <p class="text-sm text-center text-gray-500 py-4">No hay notas para este cliente.</p>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="lg:col-span-2 space-y-6">
@@ -62,32 +112,7 @@
                             @endforelse
                         </div>
                     </div>
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-    <div class="p-6">
-        <h3 class="font-semibold text-lg text-gray-800 border-b pb-3 mb-4">Bitácora / Notas Internas</h3>
 
-        <form action="{{ route('clients.notes.store', $client) }}" method="POST">
-            @csrf
-            <textarea name="note" rows="3" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Añadir una nueva nota sobre el cliente..." required></textarea>
-            <div class="text-right mt-2">
-                <button type="submit" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-md text-sm">Guardar Nota</button>
-            </div>
-        </form>
-
-        <div class="mt-6 space-y-4">
-            @forelse($client->notes as $note)
-                <div class="p-4 bg-gray-50 rounded-lg border">
-                    <p class="text-sm text-gray-700">{{ $note->note }}</p>
-                    <p class="text-xs text-gray-500 mt-2 text-right">
-                        - Escrito por <strong>{{ $note->user->name }}</strong> el {{ $note->created_at->format('d/m/Y \a \l\a\s H:i') }}
-                    </p>
-                </div>
-            @empty
-                <p class="text-sm text-center text-gray-500 py-4">No hay notas para este cliente.</p>
-            @endforelse
-        </div>
-    </div>
-</div>
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
                             <h3 class="font-semibold text-lg text-gray-800 border-b pb-3 mb-4">Últimas Facturas</h3>
@@ -119,7 +144,6 @@
                             </table>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
