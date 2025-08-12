@@ -20,57 +20,35 @@ class BillingController extends Controller
      */
     public function index(Request $request)
     {
+        $filters = $request->all();
         $searchTerm = $request->input('search');
-        $clients = null;
-        $selectedClient = null;
 
-        if ($searchTerm) {
-            $clients = Client::with('user')
-                ->where('nombre', 'like', "%{$searchTerm}%")
-                ->orWhere('apellido', 'like', "%{$searchTerm}%")
-                ->orWhere('dni_cuit', 'like', "%{$searchTerm}%")
-                ->limit(10)
-                ->get();
-        }
+        $clients = Client::query()
+            ->with([
+                'serviceAddresses' => fn($q) => $q->limit(1),
+                'payments' => fn($q) => $q->latest('fecha_pago')->limit(1)
+            ])
+            ->when($searchTerm, function ($query, $term) {
+                return $query->where(function ($q) use ($term) {
+                    $q->where('nombre', 'like', "%{$term}%")
+                        ->orWhere('apellido', 'like', "%{$term}%")
+                        ->orWhere('dni_cuit', 'like', "%{$term}%");
+                });
+            })
+            ->latest()
+            ->paginate(15);
 
-        // Si se ha seleccionado un cliente (haciendo clic en un resultado de búsqueda)
-        if ($request->has('client_id')) {
-            $selectedClient = Client::with(['user', 'contracts.plan', 'invoices' => function ($query) {
-                $query->orderBy('fecha_emision', 'desc');
-            }])->find($request->client_id);
-        }
-
-        // Lógica para los Widgets
-        $latestPayments = Payment::with('invoice.contract.client')
-            ->latest('fecha_pago') // Ordena por la fecha de pago más reciente
-            ->limit(5)
-            ->get();
-
-        $pendingInvoices = Invoice::with('contract.client')
-            ->where('estado', 'Pendiente')
-            ->orderBy('fecha_vencimiento', 'asc') // Muestra las deudas más antiguas primero
-            ->limit(5)
-            ->get();
-
-        return view('billing.manager.index', compact(
-            'clients',
-            'searchTerm',
-            'selectedClient',
-            'latestPayments',
-            'pendingInvoices'
-        ));
+        return view('billing.manager.index', compact('clients', 'filters'));
     }
 
     /**
-     * Muestra el formulario para generar un nuevo cobro.
+     * Muestra el formulario (dentro del modal) para generar un nuevo cobro.
      */
     public function createInvoice(Client $client)
     {
         $contracts = $client->contracts()->where('estado', 'Activo')->with('plan')->get();
-        return view('billing.manager.create-invoice', [
-            'client' => $client,
-            'contracts' => $contracts,
-        ]);
+        // Esta función ahora podría devolver una vista parcial para el modal
+        // o la usaremos para poblar el modal con datos.
     }
 
 
