@@ -43,13 +43,13 @@
                                 <x-slot name="content">
                                     <x-dropdown-link :href="route('clients.index')">Listado de Clientes</x-dropdown-link>
                                     <x-dropdown-link :href="route('approvals.index')">Aprobaciones</x-dropdown-link>
-                                     <x-dropdown-link :href="route('clients.create')">Nuevo Cliente</x-dropdown-link>
+                                    <x-dropdown-link :href="route('clients.create')">Nuevo Cliente</x-dropdown-link>
                                 </x-slot>
                             </x-dropdown>
                         </div>
 
                         <div class="hidden sm:flex sm:items-center">
-                            <x-dropdown align="left" width="48">
+                            <x-dropdown align="left" width="56">
                                 <x-slot name="trigger">
                                     <button
                                         class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->routeIs('billing.*') ? 'border-indigo-400 text-gray-900 focus:outline-none focus:border-indigo-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
@@ -69,7 +69,12 @@
                                     </button>
                                 </x-slot>
                                 <x-slot name="content">
-                                    <x-dropdown-link :href="route('billing.index')">Realizar Cobro / Historial</x-dropdown-link>
+                                    <x-dropdown-link :href="route('billing.index')">Realizar Cobro</x-dropdown-link>
+                                    <x-dropdown-link href="#" class="text-gray-400 cursor-not-allowed">Historial
+                                        de Pagos</x-dropdown-link>
+                                    <x-dropdown-link href="#" class="text-gray-400 cursor-not-allowed">Facturas
+                                        Pendientes</x-dropdown-link>
+                                    <div class="border-t border-gray-200"></div> {{-- Separador --}}
                                     <x-dropdown-link href="#" class="text-gray-400 cursor-not-allowed">Reportes
                                         (Próximamente)</x-dropdown-link>
                                 </x-slot>
