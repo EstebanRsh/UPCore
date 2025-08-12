@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\Contract;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -49,7 +50,16 @@ class ClientController extends Controller
             ->orderBy($sortBy, $sortDirection)
             ->paginate(15);
 
-        return view('clients.manager.index', compact('clients', 'filters'));
+        $stats = [
+            'total_clients' => Client::count(),
+            'active_clients' => Contract::where('estado', 'Activo')->distinct('cliente_id')->count(),
+            'suspended_clients' => Contract::where('estado', 'Suspendido')->distinct('cliente_id')->count(),
+            'new_clients_last_30_days' => Client::where('created_at', '>=', now()->subDays(30))->count(),
+        ];
+
+        $recentClients = Client::orderBy('created_at', 'desc')->take(5)->get();
+
+        return view('clients.manager.index', compact('clients', 'filters', 'stats', 'recentClients'));
     }
 
     /**
