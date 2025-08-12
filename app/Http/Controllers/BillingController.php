@@ -20,14 +20,10 @@ class BillingController extends Controller
      */
     public function index(Request $request)
     {
-        $filters = $request->all();
         $searchTerm = $request->input('search');
 
+        // La consulta de clientes ahora es más simple, solo para la búsqueda
         $clients = Client::query()
-            ->with([
-                'serviceAddresses' => fn($q) => $q->limit(1),
-                'payments' => fn($q) => $q->latest('fecha_pago')->limit(1)
-            ])
             ->when($searchTerm, function ($query, $term) {
                 return $query->where(function ($q) use ($term) {
                     $q->where('nombre', 'like', "%{$term}%")
@@ -36,9 +32,19 @@ class BillingController extends Controller
                 });
             })
             ->latest()
-            ->paginate(15);
+            ->paginate(10); // Mostramos 10 resultados fijos
 
-        return view('billing.manager.index', compact('clients', 'filters'));
+        // Lógica para las tarjetas de estadísticas
+        $stats = [
+            'revenue_this_month' => Payment::whereMonth('fecha_pago', Carbon::now()->month)
+                ->whereYear('fecha_pago', Carbon::now()->year)
+                ->sum('monto_pagado'),
+            'pending_invoices_count' => Invoice::where('estado', 'Pendiente')->count(),
+            'total_pending_amount' => Invoice::where('estado', 'Pendiente')->sum('monto'),
+            'payments_today' => Payment::whereDate('fecha_pago', Carbon::today())->count(),
+        ];
+
+        return view('billing.manager.index', compact('clients', 'searchTerm', 'stats'));
     }
 
     /**
