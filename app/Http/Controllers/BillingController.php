@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\Payment;
 use App\Models\Contract;
 use App\Models\Invoice;
 use Illuminate\Http\Request;
@@ -28,39 +29,50 @@ class BillingController extends Controller
                 ->where('nombre', 'like', "%{$searchTerm}%")
                 ->orWhere('apellido', 'like', "%{$searchTerm}%")
                 ->orWhere('dni_cuit', 'like', "%{$searchTerm}%")
+                ->limit(10)
                 ->get();
         }
 
+        // Si se ha seleccionado un cliente (haciendo clic en un resultado de búsqueda)
         if ($request->has('client_id')) {
-            // Carga el cliente con sus contratos, planes y TODAS sus facturas ordenadas
-            $selectedClient = Client::with([
-                'user',
-                'contracts.plan',
-                'contracts.invoices' => function ($query) {
-                    $query->orderBy('fecha_emision', 'desc');
-                },
-                'contracts.invoices.payments'
-            ])->find($request->client_id);
+            $selectedClient = Client::with(['user', 'contracts.plan', 'invoices' => function ($query) {
+                $query->orderBy('fecha_emision', 'desc');
+            }])->find($request->client_id);
         }
 
-        return view('billing.index', [
-            'clients' => $clients,
-            'searchTerm' => $searchTerm,
-            'selectedClient' => $selectedClient,
-        ]);
+        // Lógica para los Widgets
+        $latestPayments = Payment::with('invoice.contract.client')
+            ->latest('fecha_pago') // Ordena por la fecha de pago más reciente
+            ->limit(5)
+            ->get();
+
+        $pendingInvoices = Invoice::with('contract.client')
+            ->where('estado', 'Pendiente')
+            ->orderBy('fecha_vencimiento', 'asc') // Muestra las deudas más antiguas primero
+            ->limit(5)
+            ->get();
+
+        return view('billing.manager.index', compact(
+            'clients',
+            'searchTerm',
+            'selectedClient',
+            'latestPayments',
+            'pendingInvoices'
+        ));
     }
 
     /**
-     * Muestra el formulario para crear un nuevo cobro manual.
+     * Muestra el formulario para generar un nuevo cobro.
      */
     public function createInvoice(Client $client)
     {
         $contracts = $client->contracts()->where('estado', 'Activo')->with('plan')->get();
-        return view('billing.create-invoice', [
+        return view('billing.manager.create-invoice', [
             'client' => $client,
             'contracts' => $contracts,
         ]);
     }
+
 
     /**
      * Guarda un nuevo cobro (factura + pago) y genera el recibo en PDF.
@@ -110,7 +122,7 @@ class BillingController extends Controller
             // Guardamos el PDF en el disco 'local' (storage/app/private/receipts)
             Storage::disk('local')->put('receipts/' . $filename, $pdf->output());
 
-            return redirect()->route('billing.index', ['client_id' => $client->id])
+            return redirect()->route('billing.manager.index', ['client_id' => $client->id])
                 ->with('success', '¡Cobro registrado y recibo PDF generado exitosamente!');
         } catch (\Exception $e) {
             // Si algo falla, volvemos al formulario con un error
