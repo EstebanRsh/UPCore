@@ -1,0 +1,37 @@
+========================================
+DOCUMENTACIÓN: MÓDULO DE FACTURACIÓN
+========================================
+
+OBJETIVO GENERAL:
+Centralizar todas las operaciones financieras relacionadas con los cobros a clientes, desde la generación de facturas y registro de pagos hasta la consulta de historiales y la gestión de deudas.
+
+---
+
+COMPONENTES PRINCIPALES (Vistas del Manager):
+
+1. CENTRO DE COBRANZA (billing.index):
+   - Es la vista principal y el punto de partida para la operatoria diaria.
+   - Su diseño está inspirado en un dashboard, con una tabla de búsqueda de clientes y un panel de estadísticas.
+   - FUNCIONALIDAD: Permite buscar clientes rápidamente para iniciar un proceso de cobro. La tabla muestra información clave como el último pago realizado.
+   - WIDGETS: Incluye tarjetas con estadísticas vitales como ingresos del mes, cantidad de facturas pendientes y monto total adeudado.
+
+2. PORTAL DE COBRO (billing.createInvoice):
+   - Esta es la vista dedicada para registrar un nuevo pago para un cliente específico.
+   - Es un "mini-dashboard" financiero del cliente, diseñado para que el manager tenga todo el contexto necesario al momento de realizar el cobro.
+   - Ver el archivo "portal_de_cobro.txt" para más detalles.
+
+3. HISTORIAL DE PAGOS (Futuro):
+   - Vista planificada que mostrará un listado completo y filtrable de TODOS los pagos recibidos de TODOS los clientes.
+   - Será una herramienta clave para la contabilidad y el seguimiento de ingresos.
+
+4. FACTURAS PENDIENTES (Futuro):
+   - Vista planificada que mostrará una tabla con todas las facturas de todos los clientes cuyo estado sea "Pendiente".
+   - Permitirá una gestión proactiva de la morosidad.
+
+---
+
+FLUJO LÓGICO DE DATOS:
+- Un "Cliente" tiene múltiples "Contratos".
+- Un "Contrato" tiene múltiples "Facturas" (Invoices).
+- Una "Factura" tiene (generalmente) un "Pago" (Payment).
+- El sistema utiliza relaciones "hasManyThrough" en los modelos para acceder eficientemente a la información anidada (ej: obtener todas las facturas de un cliente a través de sus contratos).

@@ -1,0 +1,37 @@
+========================================
+DOCUMENTACIÓN: MÓDULO DE CONFIGURACIONES
+========================================
+
+OBJETIVO:
+Abstraer las reglas de negocio críticas de la aplicación fuera del código fuente y convertirlas en parámetros configurables por un administrador desde una interfaz gráfica. Esto proporciona flexibilidad a largo plazo y permite que el sistema se adapte a cambios en la operatoria de la empresa sin necesidad de modificar el código.
+
+---
+
+REGLAS DE NEGOCIO A CONFIGURAR (Ejemplos):
+
+1. CONFIGURACIÓN DE FACTURACIÓN:
+   - Día de inicio del período de cobro (Ej: 1).
+   - Día de fin del período de cobro (Ej: 15).
+   - Habilitar/Deshabilitar el cobro de intereses por mora.
+   - Porcentaje de interés por mora (Ej: 2%).
+   - Días de gracia antes de considerar una factura como morosa.
+
+2. CONFIGURACIÓN DE SUSPENSIONES:
+   - Habilitar/Deshabilitar la suspensión automática de servicios por falta de pago.
+   - Cantidad de días después del vencimiento para realizar la suspensión (Ej: 5 días, lo que llevaría la fecha de corte al día 20 del mes).
+
+3. OTRAS CONFIGURACIONES:
+   - Moneda por defecto (Ej: ARS).
+   - Datos de la empresa para los recibos en PDF (Nombre, Dirección, CUIT, etc.).
+   - Plantillas de correo electrónico para notificaciones.
+
+---
+
+IMPLEMENTACIÓN TÉCNICA (Plan a Futuro):
+
+- Se creará una tabla `settings` en la base de datos con una estructura de clave-valor (ej: `key='billing_due_day'`, `value='15'`).
+- Se creará un `SettingsController` y vistas correspondientes en una nueva sección del panel de administrador.
+- El resto de la aplicación (ej: `BillingController`, `Jobs` de facturación automática) no contendrá valores fijos ("hardcodeados"), sino que consultará estas configuraciones para tomar decisiones.
+   - Ejemplo: `if ($day > Setting::get('billing_due_day')) { ... }`
+
+Este enfoque asegura que la aplicación sea robusta, mantenible y adaptable a las necesidades futuras del negocio.

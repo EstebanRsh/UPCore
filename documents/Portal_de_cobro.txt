@@ -1,0 +1,38 @@
+========================================
+DOCUMENTACIÓN: PORTAL DE COBRO POR CLIENTE
+========================================
+
+OBJETIVO:
+Reemplazar el formulario simple de "crear factura" por una interfaz interactiva y contextual que sirva como un "mini-dashboard" financiero para el cliente seleccionado. El objetivo es que el manager tenga toda la información necesaria para realizar un cobro de forma rápida, precisa y flexible.
+
+---
+
+ESTRUCTURA DE LA VISTA (Diseño de dos columnas):
+
+COLUMNA IZQUIERDA - Formulario de Cobro Inteligente:
+1.  TIPO DE COBRO: Selección entre "Pago Mensual" y "Pago Adelantado".
+    - Si se elige "Adelantado", se habilita un campo para especificar la cantidad de meses.
+2.  DETALLES DE LA FACTURA:
+    - Selector de Contrato.
+    - Campo de Período/s (se ajusta si es 1 mes o varios).
+    - Fechas de Emisión y Vencimiento (calculadas automáticamente pero editables).
+3.  DETALLES DEL PAGO:
+    - Monto a Pagar (autocalculado, pero editable para pagos parciales).
+    - Método de Pago y Fecha de Pago.
+4.  NOTAS: Un campo de texto para añadir comentarios internos sobre el pago (ej: "Ref. transferencia 12345").
+5.  RESUMEN: Una tarjeta de confirmación que se actualiza en tiempo real mostrando un resumen claro del cobro antes de ser guardado.
+
+COLUMNA DERECHA - Mini-Dashboard del Cliente:
+1.  TARJETA "ESTADO DE CUENTA":
+    - Muestra la DEUDA TOTAL del cliente (suma de facturas pendientes).
+    - Muestra la fecha y monto del ÚLTIMO PAGO REALIZADO.
+2.  TARJETA "HISTORIAL RÁPIDO":
+    - Un listado compacto de los últimos 3-4 pagos realizados por el cliente.
+3.  TARJETA "FACTURAS PENDIENTES":
+    - Un listado de las facturas específicas que este cliente adeuda.
+
+---
+
+LÓGICA DE NEGOCIO:
+- La vista debe ser capaz de manejar tanto pagos simples como pagos adelantados, calculando los montos y generando las facturas correspondientes.
+- La confirmación del cobro se realiza dentro de una transacción de base de datos para garantizar la integridad de los datos (se crea la factura y el pago juntos).

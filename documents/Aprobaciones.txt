@@ -1,0 +1,45 @@
+========================================
+DOCUMENTACIÓN: FLUJO DE APROBACIÓN DE USUARIOS
+========================================
+
+OBJETIVO:
+Implementar un sistema de moderación donde los nuevos usuarios que se registran en la plataforma deben ser aprobados manualmente por un administrador ('Manager') antes de poder iniciar sesión y acceder a las funcionalidades del sistema.
+
+---
+
+FLUJO DE TRABAJO (PASO A PASO):
+
+1. REGISTRO:
+   - Un nuevo usuario se registra a través del formulario público de registro.
+   - El sistema crea una nueva entrada en la tabla `users`.
+
+2. ESTADO INICIAL:
+   - Al momento de la creación, el sistema le asigna automáticamente el rol de "Pendiente" a este nuevo usuario.
+   - Un usuario con el rol "Pendiente" no puede iniciar sesión. El middleware de autenticación debe bloquear el acceso.
+
+3. VISTA DEL ADMINISTRADOR:
+   - El administrador navega a la sección "Clientes" -> "Aprobaciones" en el panel de control.
+   - El controlador `UserApprovalController` busca en la base de datos todos los usuarios que tengan asociado el rol "Pendiente" y los muestra en una lista.
+
+4. ACCIÓN DE APROBAR:
+   - El administrador hace clic en el botón "Aprobar" junto al usuario que desea activar.
+   - Esta acción envía una petición al método `approve` del `UserApprovalController`.
+
+5. LÓGICA DE APROBACIÓN (BACKEND):
+   - La lógica se ejecuta dentro de una transacción de base de datos (`DB::transaction`) para garantizar que todas las operaciones se completen con éxito o ninguna lo haga (atomicidad).
+   - PASO 5.1: Se verifica que el usuario a aprobar realmente tenga el rol "Pendiente" para evitar aprobaciones duplicadas.
+   - PASO 5.2: Se elimina la relación del usuario con el rol "Pendiente".
+   - PASO 5.3: Se asigna al usuario el nuevo rol de "Cliente".
+   - PASO 5.4: Se crea un nuevo registro en la tabla `clients` y se asocia con el `user_id` del usuario recién aprobado. Se pre-rellenan los datos básicos (nombre, email) del cliente usando la información del usuario.
+
+6. ACCESO CONCEDIDO:
+   - Una vez la transacción se completa, el usuario ya tiene el rol "Cliente".
+   - El usuario ahora puede iniciar sesión y será redirigido al dashboard principal del cliente.
+
+---
+
+COMPONENTES CLAVE:
+- Controlador: `app/Http/Controllers/UserApprovalController.php`
+- Modelos Involucrados: `app/Models/User.php`, `app/Models/Client.php`, `app/Models/Role.php`
+- Vista: `resources/views/approvals/index.blade.php`
+- Ruta: Definida en `routes/web.php` bajo el alias `approvals.index` y `approvals.approve`.

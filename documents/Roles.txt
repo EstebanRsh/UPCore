@@ -1,0 +1,39 @@
+========================================
+DOCUMENTACIÓN: SISTEMA DE ROLES Y PERMISOS
+========================================
+
+CONCEPTO GENERAL:
+La aplicación utiliza un sistema de Control de Acceso Basado en Roles (RBAC) para gestionar lo que los diferentes tipos de usuarios pueden ver y hacer. Este sistema es la base de la seguridad y la segmentación de contenido de la aplicación.
+
+---
+
+ESTRUCTURA DE LA BASE DE DATOS:
+
+El sistema se basa en tres tablas principales:
+1. `users`: Almacena la información de autenticación de cada individuo (nombre, email, contraseña).
+2. `roles`: Define los roles disponibles en el sistema (ej: Manager, Cliente). Es una tabla simple, usualmente con `id` y `name`.
+3. `role_user` (Tabla Pivote): Es el puente que conecta a los usuarios con los roles. Un usuario puede tener múltiples roles, y un rol puede ser asignado a múltiples usuarios (relación muchos a muchos).
+
+---
+
+ROLES DEFINIDOS ACTUALMENTE:
+
+- **Manager:** Rol de administrador con acceso completo a todas las secciones del panel de control. Puede gestionar clientes, aprobaciones, facturación, planes, etc.
+- **Cliente:** Rol estándar para los clientes de la empresa. Una vez aprobado, el usuario con este rol puede ver su dashboard, historial de pagos, contratos, etc.
+- **Pendiente:** Rol por defecto asignado a cualquier nuevo usuario que se registra. Este rol no tiene permisos para acceder a ninguna parte del sistema que requiera autenticación. Es un estado transitorio hasta que un 'Manager' lo aprueba.
+
+---
+
+BENEFICIOS Y RENDIMIENTO:
+
+- **Escalabilidad:** Este sistema es altamente escalable. Añadir nuevos roles en el futuro (ej: "Técnico", "Soporte") es tan simple como agregar una nueva fila en la tabla `roles` y definir sus permisos en el código, sin necesidad de alterar la estructura de la base de datos.
+
+- **Rendimiento:** La búsqueda del rol de un usuario es una operación extremadamente rápida y eficiente. Las bases de datos relacionales están optimizadas para este tipo de consultas a través de relaciones y el uso de índices. Además, Laravel utiliza Eager Loading para evitar consultas redundantes a la base de datos, asegurando que el rendimiento no se degrade incluso con un gran número de usuarios.
+
+- **Claridad del Código:** Permite escribir un código mucho más legible y mantenible. Las verificaciones de permisos se vuelven explícitas y fáciles de entender (ej: `if ($user->hasRole('Manager'))`).
+
+---
+
+COMPONENTES CLAVE:
+- Modelos: `app/Models/User.php` (con su relación `roles()`), `app/Models/Role.php`.
+- Middleware: `app/Http/Middleware/CheckRole.php` para proteger rutas específicas y permitir el acceso solo a ciertos roles.
