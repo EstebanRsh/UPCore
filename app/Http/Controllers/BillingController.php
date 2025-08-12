@@ -20,10 +20,15 @@ class BillingController extends Controller
      */
     public function index(Request $request)
     {
+        $filters = $request->all();
         $searchTerm = $request->input('search');
+        $city = $request->input('city');
+        // Añadimos valores por defecto para el ordenamiento
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
 
-        // La consulta de clientes ahora es más simple, solo para la búsqueda
         $clients = Client::query()
+            ->with(['payments' => fn($q) => $q->latest('fecha_pago')->limit(1)])
             ->when($searchTerm, function ($query, $term) {
                 return $query->where(function ($q) use ($term) {
                     $q->where('nombre', 'like', "%{$term}%")
@@ -31,20 +36,23 @@ class BillingController extends Controller
                         ->orWhere('dni_cuit', 'like', "%{$term}%");
                 });
             })
-            ->latest()
-            ->paginate(10); // Mostramos 10 resultados fijos
+            // ¡NUEVO! Aplicamos el filtro de ciudad si existe
+            ->when($city, function ($query, $cityTerm) {
+                return $query->whereHas('serviceAddresses', fn($q) => $q->where('ciudad', 'like', "%{$cityTerm}%"));
+            })
+            // ¡NUEVO! Aplicamos el ordenamiento
+            ->orderBy($sortBy, $sortDirection)
+            ->paginate(5);
 
-        // Lógica para las tarjetas de estadísticas
+        // La lógica de estadísticas no cambia
         $stats = [
-            'revenue_this_month' => Payment::whereMonth('fecha_pago', Carbon::now()->month)
-                ->whereYear('fecha_pago', Carbon::now()->year)
-                ->sum('monto_pagado'),
+            'revenue_this_month' => Payment::whereMonth('fecha_pago', Carbon::now()->month)->sum('monto_pagado'),
             'pending_invoices_count' => Invoice::where('estado', 'Pendiente')->count(),
             'total_pending_amount' => Invoice::where('estado', 'Pendiente')->sum('monto'),
             'payments_today' => Payment::whereDate('fecha_pago', Carbon::today())->count(),
         ];
 
-        return view('billing.manager.index', compact('clients', 'searchTerm', 'stats'));
+        return view('billing.manager.index', compact('clients', 'filters', 'stats'));
     }
 
     /**
