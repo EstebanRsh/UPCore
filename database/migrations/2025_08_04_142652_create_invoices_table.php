@@ -17,7 +17,7 @@ return new class extends Migration
             $table->date('fecha_emision');
             $table->date('fecha_vencimiento');
             $table->decimal('monto', 10, 2);
-            $table->string('estado');
+            $table->string('estado')->default('Pendiente');
             $table->softDeletes();
             $table->timestamps();
         });

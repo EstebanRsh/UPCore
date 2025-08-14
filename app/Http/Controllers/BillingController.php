@@ -63,6 +63,10 @@ class BillingController extends Controller
         $contracts = $client->contracts()->where('estado', 'Activo')->with('plan')->get();
         // Esta función ahora podría devolver una vista parcial para el modal
         // o la usaremos para poblar el modal con datos.
+        return view('billing.manager.create-invoice', [
+    'client'    => $client,
+    'contracts' => $contracts, // lo que ya prepares
+]);
     }
 
 
