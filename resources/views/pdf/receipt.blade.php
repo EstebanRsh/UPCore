@@ -2,161 +2,124 @@
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8">
     <title>Recibo #{{ $invoice->id }}</title>
     <style>
         body {
-            font-family: 'Helvetica', sans-serif;
-            font-size: 10pt;
-            color: #333;
+            font-family: DejaVu Sans, sans-serif;
+            font-size: 12px;
         }
 
-        .receipt-container {
-            width: 100%;
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
         }
 
-        .header,
-        .details-section {
-            margin-bottom: 20px;
-        }
-
-        .company-details {
-            text-align: right;
-        }
-
-        .company-name {
-            font-size: 1.6em;
-            font-weight: 600;
-            color: #007bff;
-            margin: 0;
-        }
-
-        .client-info h2 {
-            font-size: 0.9em;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 5px;
-        }
-
-        .receipt-info {
-            text-align: right;
-            font-size: 0.9em;
-        }
-
-        .items-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        .items-table th {
-            background-color: #f2f8ff;
-            color: #007bff;
-            font-weight: 600;
-            text-align: left;
-            padding: 8px;
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        .items-table td {
-            padding: 8px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .items-table .text-right {
-            text-align: right;
-        }
-
-        .items-table tfoot .total-row td {
-            border-top: 2px solid #333;
+        .title {
+            font-size: 18px;
             font-weight: bold;
-            font-size: 1.1em;
-            color: #000;
-        }
-
-        .footer {
-            text-align: center;
-            padding-top: 20px;
-            font-size: 9pt;
-            color: #333;
         }
 
         table {
             width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
         }
 
-        .w-50 {
-            width: 50%;
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 6px;
+            text-align: left;
         }
 
-        .text-right {
+        .right {
             text-align: right;
         }
     </style>
 </head>
 
 <body>
-    <div class="receipt-container">
-        <table>
+    <div class="header">
+        <div class="title">Recibo de Pago</div>
+        <div>Fecha: {{ now()->format('d/m/Y H:i') }}</div>
+    </div>
+
+    <strong>Cliente</strong><br>
+    {{ $client->nombre }}<br>
+    @if ($client->email)
+        {{ $client->email }}<br>
+    @endif
+
+    <table>
+        <tr>
+            <th># Factura</th>
+            <td>{{ $invoice->id }}</td>
+            <th>Estado</th>
+            <td>{{ $invoice->estado }}</td>
+        </tr>
+        <tr>
+            <th>Emisión</th>
+            <td>{{ \Carbon\Carbon::parse($invoice->fecha_emision)->format('d/m/Y') }}</td>
+            <th>Vencimiento</th>
+            <td>{{ \Carbon\Carbon::parse($invoice->fecha_vencimiento)->format('d/m/Y') }}</td>
+        </tr>
+        <tr>
+            <th>Contrato</th>
+            <td>#{{ $invoice->contract->id }}</td>
+            <th>Plan</th>
+            <td>{{ $invoice->contract->plan->nombre ?? 'Plan' }}</td>
+        </tr>
+    </table>
+
+    <table>
+        <thead>
             <tr>
-                <td class="w-50">
-                    <h1 class="company-name">UPCore ISP</h1>
-                </td>
-                <td class="w-50 text-right">
-                    <p>Recibo #: <strong>{{ str_pad($invoice->id, 6, '0', STR_PAD_LEFT) }}</strong></p>
-                    <p>Fecha de Pago:
-                        <strong>{{ \Carbon\Carbon::parse($payment->fecha_pago)->format('d/m/Y') }}</strong></p>
-                </td>
+                <th>Descripción</th>
+                <th class="right">Monto</th>
             </tr>
-        </table>
-
-        <hr style="margin: 20px 0;">
-
-        <table>
+        </thead>
+        <tbody>
             <tr>
-                <td class="w-50">
-                    <h2>Cliente</h2>
-                    <p><strong>{{ $invoice->contract->client->nombre }}
-                            {{ $invoice->contract->client->apellido }}</strong></p>
-                    <p>DNI/CUIT: {{ $invoice->contract->client->dni_cuit }}</p>
-                    <p>{{ $invoice->contract->serviceAddress->direccion }},
-                        {{ $invoice->contract->serviceAddress->ciudad }}</p>
-                </td>
+                <td>Servicio {{ \Carbon\Carbon::parse($invoice->fecha_emision)->format('Y-m') }}</td>
+                <td class="right">${{ number_format($invoice->monto, 2) }}</td>
             </tr>
-        </table>
+        </tbody>
+        <tfoot>
+            <tr>
+                <th class="right">Total pagado</th>
+                <th class="right">${{ number_format($invoice->monto, 2) }}</th>
+            </tr>
+        </tfoot>
+    </table>
 
-        <br><br>
-
-        <table class="items-table">
+    @if ($invoice->payments->count())
+        <p><strong>Pagos</strong></p>
+        <table>
             <thead>
                 <tr>
-                    <th>Descripción</th>
-                    <th class="text-right">Total</th>
+                    <th>Fecha</th>
+                    <th>Método</th>
+                    <th class="right">Monto</th>
+                    <th>Notas</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>Servicio de Internet - Plan {{ $invoice->contract->plan->nombre_plan }} - Período
-                        {{ \Carbon\Carbon::parse($invoice->fecha_emision)->format('m/Y') }}</td>
-                    <td class="text-right">${{ number_format($invoice->monto, 2) }}</td>
-                </tr>
+                @foreach ($invoice->payments as $p)
+                    <tr>
+                        <td>{{ \Carbon\Carbon::parse($p->fecha_pago)->format('d/m/Y') }}</td>
+                        <td>{{ $p->metodo_pago }}</td>
+                        <td class="right">${{ number_format($p->monto_pagado, 2) }}</td>
+                        <td>{{ $p->notas }}</td>
+                    </tr>
+                @endforeach
             </tbody>
-            <tfoot>
-                <tr class="total-row">
-                    <td>Método de Pago: {{ $payment->metodo_pago }}</td>
-                    <td class="text-right"><strong>TOTAL PAGADO:
-                            ${{ number_format($payment->monto_pagado, 2) }}</strong></td>
-                </tr>
-            </tfoot>
         </table>
+    @endif
 
-        <footer class="footer">
-            <p><strong>Gracias por su pago.</strong></p>
-        </footer>
-    </div>
+    <p style="margin-top: 12px;">Gracias por su pago.</p>
 </body>
 
 </html>

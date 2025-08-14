@@ -3,27 +3,31 @@
 namespace App\Http\Controllers;
 
 use App\Models\Invoice;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage; // Importante
+use Illuminate\Support\Facades\Storage;
 
 class InvoiceController extends Controller
 {
     /**
-     * Muestra el PDF de una factura si existe en el almacenamiento.
+     * Muestra/descarga el PDF desde storage/app/receipts usando response()->file()
+     * (evita el warning de Intelephense).
      */
     public function showPdf(Invoice $invoice)
     {
-        if (!$invoice->pdf_filename) {
-            abort(404, 'La factura no tiene un archivo PDF asociado.');
+        if (! $invoice->pdf_filename) {
+            abort(404, 'El recibo no está disponible.');
         }
 
-        $path = 'receipts/' . $invoice->pdf_filename;
+        $relativePath = 'receipts/' . $invoice->pdf_filename;
+        $absolutePath = storage_path('app/' . $relativePath);
 
-        if (!Storage::disk('local')->exists($path)) {
-            abort(404, 'El archivo PDF de la factura no fue encontrado en el servidor.');
+        if (! file_exists($absolutePath)) {
+            abort(404, 'Archivo de recibo no encontrado.');
         }
 
-        // ¡ESTA ES LA CORRECCIÓN!
-        return Storage::response($path);
+        // Mostrar inline en el navegador (si el browser lo permite)
+        return response()->file($absolutePath, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $invoice->pdf_filename . '"',
+        ]);
     }
 }

@@ -129,20 +129,22 @@
                 <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                     <h3 class="text-sm font-medium text-gray-500 truncate">Ingresos (Este Mes)</h3>
                     <p class="mt-1 text-3xl font-semibold text-green-600">
-                        ${{ number_format($stats['revenue_this_month'], 2) }}</p>
+                        ${{ number_format($stats['revenue_this_month'] ?? 0, 2) }}</p>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                     <h3 class="text-sm font-medium text-gray-500 truncate">Facturas Pendientes</h3>
-                    <p class="mt-1 text-3xl font-semibold text-yellow-600">{{ $stats['pending_invoices_count'] }}</p>
+                    <p class="mt-1 text-3xl font-semibold text-yellow-600">{{ $stats['pending_invoices_count'] ?? 0 }}
+                    </p>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                     <h3 class="text-sm font-medium text-gray-500 truncate">Monto Pendiente Total</h3>
                     <p class="mt-1 text-3xl font-semibold text-red-600">
-                        ${{ number_format($stats['total_pending_amount'], 2) }}</p>
+                        ${{ number_format($stats['total_pending_amount'] ?? 0, 2) }}</p>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                     <h3 class="text-sm font-medium text-gray-500 truncate">Pagos Registrados Hoy</h3>
-                    <p class="mt-1 text-3xl font-semibold text-blue-600">{{ $stats['payments_today'] }}</p>
+                    <p class="mt-1 text-3xl font-semibold text-blue-600">{{ $stats['paid_invoices_this_month'] ?? 0 }}
+                    </p>
                 </div>
             </div>
         </div>

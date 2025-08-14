@@ -8,6 +8,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ServiceAddressController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PromotionController;
 
@@ -35,7 +36,7 @@ Route::middleware(['auth', 'verified', 'role:cliente'])->group(function () {
 //==============================================
 // RUTAS PARA MANAGER
 //==============================================
-Route::middleware(['auth', 'verified', 'role:manager'])->group(function () {
+Route::middleware(['web', 'auth', 'verified', 'role:manager'])->group(function () {
     // Gestiones Principales
     Route::resource('planes', PlanController::class);
     Route::resource('clients', ClientController::class);
@@ -71,12 +72,12 @@ Route::middleware(['auth', 'verified', 'role:manager'])->group(function () {
         // Página principal para buscar clientes y ver su estado de cuenta
         Route::get('/', [BillingController::class, 'index'])->name('index');
 
-        // Muestra el formulario para generar un nuevo cobro a un cliente
         Route::get('/{client}/create', [BillingController::class, 'createInvoice'])->name('createInvoice');
 
-        // Guarda el nuevo cobro (factura + pago)
         Route::post('/{client}/store', [BillingController::class, 'storeInvoice'])->name('storeInvoice');
     });
+    // Ver PDF de recibo
+    Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'showPdf'])->name('invoices.pdf');
 });
 
 require __DIR__ . '/auth.php';
