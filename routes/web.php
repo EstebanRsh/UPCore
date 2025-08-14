@@ -38,7 +38,10 @@ Route::middleware(['auth', 'verified', 'role:cliente'])->group(function () {
 //==============================================
 Route::middleware(['web', 'auth', 'verified', 'role:manager'])->group(function () {
     // Gestiones Principales
-    Route::resource('planes', PlanController::class);
+    Route::prefix('settings')->name('settings.')->group(function () {
+        Route::resource('planes', PlanController::class); // settings.planes.index, create, store, edit, update, destroy
+        Route::patch('planes/{plane}/toggle', [PlanController::class, 'toggle'])->name('planes.toggle');
+    });
     Route::resource('clients', ClientController::class);
     //Route::resource('promotions', PromotionController::class);
     Route::resource('contracts', ContractController::class)->except(['create', 'store']);

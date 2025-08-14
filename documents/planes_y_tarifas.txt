@@ -1,0 +1,126 @@
+========================================
+ESPECIFICACIÓN: PLANES Y TARIFAS
+Ubicación: Configuración → Planes y tarifas
+========================================
+
+OBJETIVO
+--------
+Gestionar la oferta de planes de internet (catálogo) de forma simple y flexible:
+- Definir planes (nombre, velocidad, precio).
+- Editar SOLO el precio de un plan (el resto queda inmutable).
+- Activar/Inactivar planes.
+- Eliminar planes SOLO si no están en uso.
+- Usar el precio vigente al momento de facturar, sin afectar históricos.
+
+PRINCIPIOS CLAVE (AR)
+---------------------
+1) Flexibilidad de precio: la economía cambia; el manager puede actualizar precios del plan cuando lo necesite.
+2) Históricos inviolables: las facturas guardan el monto cobrado en ese momento (no se recalculan con cambios futuros).
+3) Simplicidad operativa: no hay prorrateos ni “cambios de plan” complejos en el mes. Si se quiere un plan “nuevo” (más megas, etc.), se CREA un plan nuevo y se RENUEVAN contratos hacia ese plan a partir de la próxima factura.
+4) Seguridad de catálogo: si un plan tiene contratos activos, NO se puede eliminar, solo inactivar.
+
+MODELO DE DATOS (mínimo)
+------------------------
+Tabla: plans
+- id (PK)
+- nombre (string, único entre planes activos)
+- velocidad_bajada_mbps (int)   (inmutable)
+- velocidad_subida_mbps (int)   (inmutable)
+- precio_mensual (decimal 10,2) (EDITABLE)
+- estado (enum/string: 'Activo'|'Inactivo'; default 'Activo')
+- descripción (text, nullable)
+- timestamps
+- soft deletes (opcional)
+
+Relaciones:
+- Contract.plan() → belongsTo(Plan, 'plan_id')
+- Client.contracts() → hasMany(Contract, 'cliente_id')
+
+Reglas de integridad:
+- No permitir eliminar un plan si existe algún contrato con plan_id = plan.id (activo o histórico). En ese caso, solo “Inactivar”.
+- En formularios de contrato, listar SOLO planes con estado = 'Activo'.
+- Al editar un plan, solo se puede modificar `precio_mensual`. (nombre/velocidades quedan bloqueados para evitar confusión).
+
+FACTURACIÓN Y PRECIO
+--------------------
+- La factura guarda `monto` (número) independiente del plan.
+- El formulario de cobro autocompleta “monto pagado” con `precio_mensual` del plan vigente, pero el manager puede sobreescribirlo (flexibilidad).
+- Cambiar el precio del plan NO cambia facturas ya emitidas.
+
+RENOVACIÓN DE PLANES PARA CLIENTES
+----------------------------------
+- Si el ISP quiere ofrecer un plan con más megas:
+  1) CREAR nuevo plan (ej.: “Fibra 150”).
+  2) A partir del próximo ciclo, RENOVAR los contratos deseados para que apunten al nuevo plan_id.
+  3) No hay prorrateos dentro del mes; el cambio corre desde la próxima factura.
+
+CICLO DE VIDA DEL PLAN
+----------------------
+- Crear → (Activo por defecto)
+- Editar precio (cambios inmediatos para futuras facturaciones)
+- Inactivar (no aparece en formularios de nuevos contratos; los contratos existentes pueden seguir hasta su renovación)
+- Eliminar (solo si no existe ningún contrato asociado, actual o histórico)
+
+UI / UX (Manager → Configuración → Planes y tarifas)
+----------------------------------------------------
+1) Listado de planes (index)
+   - Columnas: Nombre | Velocidad | Precio mensual | Estado | Acciones
+   - Acciones: Editar (solo precio), Activar/Inactivar, Eliminar (si se puede)
+   - Filtros: Estado (Activos/Inactivos), Búsqueda por nombre
+   - Métricas opcionales: # de contratos por plan (para decidir si conviene inactivar)
+
+2) Crear plan (create)
+   - Campos: Nombre, Bajada (Mbps), Subida (Mbps), Precio, Descripción (opcional)
+   - Estado: Activo (por defecto)
+   - Validaciones: nombre único entre activos, precio ≥ 0, velocidades ≥ 1
+
+3) Editar plan (edit)
+   - SOLO campo editable: Precio mensual
+   - Mostrar campos inmutables en modo lectura (nombre/velocidades)
+   - Mostrar advertencia: “Cambiar el precio afecta futuras facturaciones, no las ya emitidas”
+
+4) Confirmaciones
+   - Inactivar: “Este plan no podrá seleccionarse en nuevos contratos. ¿Continuar?”
+   - Eliminar: “Sólo si no tiene contratos asociados. ¿Continuar?”
+   - Bloquear botón Eliminar si hay contratos (mostrar tooltip/nota)
+
+RUTAS (sugeridas)
+-----------------
+- settings.plans.index    GET   /settings/plans
+- settings.plans.create   GET   /settings/plans/create
+- settings.plans.store    POST  /settings/plans
+- settings.plans.edit     GET   /settings/plans/{plan}/edit
+- settings.plans.update   PUT   /settings/plans/{plan}
+- settings.plans.toggle   PATCH /settings/plans/{plan}/toggle   (activar/inactivar)
+- settings.plans.destroy  DELETE/settings/plans/{plan}          (solo si sin contratos)
+
+MIDDLEWARE Y ROLES
+------------------
+- Acceso sugerido: 'auth', 'verified', y rol 'manager' o 'admin'.
+- Eliminar plan: recomendado 'admin' únicamente.
+
+VALIDACIONES (mínimas)
+----------------------
+- nombre: requerido, string, máx 120, único (entre activos); inmutable en update
+- velocidad_bajada_mbps / velocidad_subida_mbps: required, integer, min 1; inmutables en update
+- precio_mensual: required, numeric, min 0; editable en update
+- estado: in:Activo,Inactivo (solo vía toggle)
+
+MENSAJES DE ERROR/INFO (UX)
+---------------------------
+- Al editar precio: “Precio actualizado. Las futuras facturas tomarán este valor como referencia.”
+- Al inactivar: “Plan inactivado. No aparecerá en nuevos contratos.”
+- Al intentar eliminar con contratos asociados: “No es posible eliminar. Existen contratos vinculados. Inactive el plan en su lugar.”
+
+COMPATIBILIDAD CON FACTURACIÓN ACTUAL
+-------------------------------------
+- El formulario de cobro seguirá autocompletando el monto con el “precio_mensual” del plan del contrato.
+- El manager puede sobreescribir el monto (situaciones especiales de AR).
+- La factura guarda el monto final cobrado (histórico protegido).
+
+ROADMAP (opcional, fase 2+)
+---------------------------
+- Historial de cambios de precio (tabla plan_price_changes) para auditoría.
+- Reporte: cantidad de contratos por plan y evolución mensual de ingresos.
+- Asistente para “renovar contratos al nuevo plan” en lote (sin prorrateo).
+

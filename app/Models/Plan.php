@@ -10,19 +10,27 @@ class Plan extends Model
     use HasFactory;
 
     protected $fillable = [
-        'nombre_plan', // 
-        'velocidad_mbps', // 
-        'precio_mensual', // 
-        'descripcion', // 
-        'activo', // 
+        'nombre_plan',
+        'velocidad_mbps',
+        'precio_mensual',
+        'descripcion',
+        'activo',
     ];
 
-    /**
-     * Get the contracts associated with the plan.
-     * Relación 1 a N con Contrato 
-     */
+    protected $casts = [
+        'activo' => 'bool',
+        'precio_mensual' => 'decimal:2',
+    ];
+
     public function contracts()
     {
-        return $this->hasMany(Contract::class);
+        // FK por convención: plan_id en contracts
+        return $this->hasMany(Contract::class, 'plan_id');
+    }
+
+    /** Scope para listar solo activos */
+    public function scopeActivo($q)
+    {
+        return $q->where('activo', true);
     }
 }
